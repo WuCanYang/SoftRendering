@@ -9,8 +9,8 @@ class RenderManager  //¼¸ºÎ½×¶Î
 	DisplayManager* displayManager;
 
 public:
-	inline void setSceneManager(SceneManager* sm);
-	inline void setDisplayManager(DisplayManager* dm);
+	void setSceneManager(SceneManager* sm);
+	void setDisplayManager(DisplayManager* dm);
 
 
 

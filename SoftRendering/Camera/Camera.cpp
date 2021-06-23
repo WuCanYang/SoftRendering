@@ -1,10 +1,9 @@
-#include "Light.h"
+#include "Camera.h"
 
-
-Matrix4X4 Light::GetViewMatrix()
+Matrix4X4 Camera::GetViewMatrix()
 {
 	Vector3 up(0.0f, 1.0f, 0.0f);
-	Vector3 direction = Direction;
+	Vector3 direction = Position - Target;
 	direction.Normalize();
 
 	Vector3 right = up.cross(direction);

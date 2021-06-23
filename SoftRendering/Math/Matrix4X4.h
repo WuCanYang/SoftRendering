@@ -3,14 +3,19 @@
 
 class Matrix4X4
 {
+public:
 	float m11, m12, m13, m14;
 	float m21, m22, m23, m24;
 	float m31, m32, m33, m34;
 	float m41, m42, m43, m44;
 
-public:
-
-	
+	Matrix4X4()
+	{
+		m11 = m12 = m13 = m14 = 0.0f;
+		m21 = m22 = m23 = m24 = 0.0f;
+		m31 = m32 = m33 = m34 = 0.0f;
+		m41 = m42 = m43 = m44 = 0.0f;
+	}
 
 	inline Matrix4X4 operator*(const Matrix4X4& a)
 	{

@@ -139,17 +139,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera\Camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Managers\DisplayManager\DisplayManager.cpp" />
     <ClCompile Include="Managers\RenderManager\RenderManager.cpp" />
     <ClCompile Include="Managers\SceneManager\SceneManager.cpp" />
-    <ClCompile Include="Math\Vector2.cpp" />
     <ClCompile Include="Model\Light.cpp" />
     <ClCompile Include="Model\Model.cpp" />
     <ClCompile Include="Model\Triangle.cpp" />
     <ClCompile Include="SoftRender.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera\Camera.h" />
     <ClInclude Include="Managers\DisplayManager\DisplayManager.h" />
     <ClInclude Include="Managers\RenderManager\RenderManager.h" />
     <ClInclude Include="Managers\SceneManager\SceneManager.h" />
@@ -160,6 +161,8 @@
     <ClInclude Include="Model\Light.h" />
     <ClInclude Include="Model\Model.h" />
     <ClInclude Include="Model\OBJ_Loader.h" />
+    <ClInclude Include="Model\stb_image.h" />
+    <ClInclude Include="Model\Texture.h" />
     <ClInclude Include="Model\Triangle.h" />
     <ClInclude Include="SoftRender.h" />
   </ItemGroup>

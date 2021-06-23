@@ -1,10 +1,11 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "../../Model/Model.h"
+#include "../../Model/Light.h"
+#include "../../Camera/Camera.h"
 
 class RenderManager;
-class Model;
-class Light;
 
 class SceneManager  //应用程序阶段
 {
@@ -12,17 +13,19 @@ class SceneManager  //应用程序阶段
 
 	std::vector<Model*> models;
 	Light* light;
+	Camera* camera;
 
 private:
 
 	void loadModel(std::string path);
 	void loadLight();
+	void loadCamera();
 
 public:
 	SceneManager();
 	~SceneManager();
 
-	inline void setRenderManager(RenderManager* rm);
+	void setRenderManager(RenderManager* rm);
 
 
 	void frame();

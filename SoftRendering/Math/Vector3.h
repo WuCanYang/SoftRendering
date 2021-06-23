@@ -34,6 +34,10 @@ public:
 
 	inline Vector3 operator/(const float& a)
 	{
+		if (a == 0.0f)
+		{
+			return Vector3(0.0f);
+		}
 		return Vector3(_x / a, _y / a, _z / a);
 	}
 
