@@ -4,7 +4,7 @@
 #include "../../Model/Light.h"
 #include "../../Model/OBJ_Loader.h"
 
-SceneManager::SceneManager()
+SceneManager::SceneManager(): renderManager(nullptr), camera(nullptr), light(nullptr)
 {
 	loadModel("");
 	loadLight();
@@ -55,7 +55,25 @@ void SceneManager::setRenderManager(RenderManager* rm)
 
 void SceneManager::frame()
 {
-
+	for (Model* model : models)
+	{
+		model->update();
+	}
+	light->update();
 }
 
+std::vector<Model*>* SceneManager::GetSceneModels()
+{
+	return &models;
+}
+
+Light* SceneManager::GetLight()
+{
+	return light;
+}
+
+Camera* SceneManager::GetCamera()
+{
+	return camera;
+}
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <stdlib.h>
 
 class Texture
 {
@@ -12,4 +13,6 @@ public:
 	{
 		free(data);
 	}
+
+	
 };

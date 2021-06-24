@@ -147,6 +147,7 @@
     <ClCompile Include="Model\Light.cpp" />
     <ClCompile Include="Model\Model.cpp" />
     <ClCompile Include="Model\Triangle.cpp" />
+    <ClCompile Include="Shader\Shader.cpp" />
     <ClCompile Include="SoftRender.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -154,16 +155,19 @@
     <ClInclude Include="Managers\DisplayManager\DisplayManager.h" />
     <ClInclude Include="Managers\RenderManager\RenderManager.h" />
     <ClInclude Include="Managers\SceneManager\SceneManager.h" />
+    <ClInclude Include="Math\Matrix3X3.h" />
     <ClInclude Include="Math\Matrix4X4.h" />
     <ClInclude Include="Math\Vector2.h" />
     <ClInclude Include="Math\Vector3.h" />
     <ClInclude Include="Math\Vector4.h" />
+    <ClInclude Include="Model\Constant.h" />
     <ClInclude Include="Model\Light.h" />
     <ClInclude Include="Model\Model.h" />
     <ClInclude Include="Model\OBJ_Loader.h" />
     <ClInclude Include="Model\stb_image.h" />
     <ClInclude Include="Model\Texture.h" />
     <ClInclude Include="Model\Triangle.h" />
+    <ClInclude Include="Shader\Shader.h" />
     <ClInclude Include="SoftRender.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

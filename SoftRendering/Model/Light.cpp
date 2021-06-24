@@ -1,6 +1,11 @@
 #include "Light.h"
 
 
+void Light::update()
+{
+
+}
+
 Matrix4X4 Light::GetViewMatrix()
 {
 	Vector3 up(0.0f, 1.0f, 0.0f);
@@ -28,4 +33,18 @@ Matrix4X4 Light::GetViewMatrix()
 
 	viewTransform.m44 = 1.0f;
 	return viewTransform;
+}
+
+Matrix4X4 Light::GetOrthoMatrix(float left, float right, float bottom, float top, float near, float far)
+{
+	Matrix4X4 m;
+	m.m11 = 2.0f / (right - left);
+	m.m14 = -(right + left) / (right - left);
+	m.m22 = 2.0f / (top - bottom);
+	m.m24 = -(top + bottom) / (top - bottom);
+	m.m33 = 2.0f / (near - far);
+	m.m34 = -(far + near) / (far - near);
+	m.m44 = 1.0f;
+
+	return m;
 }

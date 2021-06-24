@@ -1,4 +1,6 @@
 #include "Camera.h"
+#include "../Model/Constant.h"
+#include <math.h>
 
 Matrix4X4 Camera::GetViewMatrix()
 {
@@ -27,4 +29,20 @@ Matrix4X4 Camera::GetViewMatrix()
 
 	viewTransform.m44 = 1.0f;
 	return viewTransform;
+}
+
+Matrix4X4 Camera::GetPerspectiveMatrix()
+{
+	Matrix4X4 m;
+
+	float tanHalfFov = tanf(fovy / 2 / 180 * PI);
+	float aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+
+	m.m11 = 1.0f / (aspect * tanHalfFov);
+	m.m22 = 1.0f / (tanHalfFov);
+	m.m33 = (near + far) / (near - far);
+	m.m34 = 2 * near * far / (near - far);
+	m.m43 = -1.0f;
+
+	return m;
 }

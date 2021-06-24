@@ -27,6 +27,9 @@ public:
 
 	void setRenderManager(RenderManager* rm);
 
+	std::vector<Model*>* GetSceneModels();
+	Light* GetLight();
+	Camera* GetCamera();
 
 	void frame();
 };

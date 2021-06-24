@@ -282,13 +282,6 @@ public:
 		if (!file.is_open())
 			return nullptr;
 
-		std::vector<Vector3> Positions;
-		std::vector<Vector2> TCoords;
-		std::vector<Vector3> Normals;
-
-		std::vector<Vertex> Vertices;
-		std::vector<unsigned int> Indices;
-
 		Model* model = new Model;
 
 		std::string curline;
@@ -300,7 +293,7 @@ public:
 				std::vector<std::string> spos;
 				algorithm::split(algorithm::tail(curline), spos, " ");
 
-				Positions.push_back(Vector3(std::stof(spos[0]), std::stof(spos[1]), std::stof(spos[2])));
+				model->Vertices.push_back(Vector3(std::stof(spos[0]), std::stof(spos[1]), std::stof(spos[2])));
 			}
 			// Generate a Vertex Texture Coordinate
 			if (algorithm::firstToken(curline) == "vt")
@@ -308,7 +301,7 @@ public:
 				std::vector<std::string> stex;
 				algorithm::split(algorithm::tail(curline), stex, " ");
 
-				TCoords.push_back(Vector2(std::stof(stex[0]), std::stof(stex[1])));
+				model->TexCoords.push_back(Vector2(std::stof(stex[0]), std::stof(stex[1])));
 			}
 			// Generate a Vertex Normal;
 			if (algorithm::firstToken(curline) == "vn")
@@ -316,18 +309,25 @@ public:
 				std::vector<std::string> snor;
 				algorithm::split(algorithm::tail(curline), snor, " ");
 
-				Normals.push_back(Vector3(std::stof(snor[0]), std::stof(snor[1]), std::stof(snor[2])));
+				model->Normals.push_back(Vector3(std::stof(snor[0]), std::stof(snor[1]), std::stof(snor[2])));
 			}
 			// Generate a Face (vertices & indices)
 			if (algorithm::firstToken(curline) == "f")
 			{
-				// Generate the vertices
-				std::vector<Vertex> vVerts;
-				GenVerticesFromRawOBJ(vVerts, Positions, TCoords, Normals, curline);
+				std::vector<std::string> fnor;
+				algorithm::split(algorithm::tail(curline), fnor, " ");
+				model->VerticesIndices.push_back(Index3I());
+				model->TexCoordsIndices.push_back(Index3I());
+				model->NormalsIndices.push_back(Index3I());
 
-				if (vVerts.size() == 3)
+				for (int i = 0; i < fnor.size(); ++i)
 				{
-					model->faces.push_back(Triangle(vVerts[0], vVerts[1], vVerts[2]));
+					std::vector<std::string> tmp;
+					algorithm::split(fnor[i], tmp, "/");	//  P / T / N
+
+					model->VerticesIndices.back().index[i] = stoi(tmp[0]) - 1;
+					model->TexCoordsIndices.back().index[i] = stoi(tmp[1]) - 1;
+					model->NormalsIndices.back().index[i] = stoi(tmp[2]) - 1;
 				}
 			}
 		}
