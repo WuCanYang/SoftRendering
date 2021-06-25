@@ -7,7 +7,7 @@ void SoftRender::Init()
 	renderManager.setSceneManager(&sceneManager);
 	renderManager.setDisplayManager(&displayManager);
 
-	displayManager.setRenderManager(&renderManager);
+	displayManager.Init(&renderManager);
 }
 
 void SoftRender::frame()

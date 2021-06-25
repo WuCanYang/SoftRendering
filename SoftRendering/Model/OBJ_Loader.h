@@ -357,7 +357,7 @@ private:
 
 	// Generate vertices from a list of positions,
 	//	tcoords, normals and a face line
-	static void GenVerticesFromRawOBJ(std::vector<Vertex>& oVerts,
+/*	static void GenVerticesFromRawOBJ(std::vector<Vertex>& oVerts,
 		const std::vector<Vector3>& iPositions,
 		const std::vector<Vector2>& iTCoords,
 		const std::vector<Vector3>& iNormals,
@@ -634,4 +634,6 @@ private:
 				break;
 		}
 	}
+
+	*/
 };

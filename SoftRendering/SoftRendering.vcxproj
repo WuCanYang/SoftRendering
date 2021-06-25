@@ -152,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera\Camera.h" />
+    <ClInclude Include="Managers\DisplayManager\Buffer.h" />
     <ClInclude Include="Managers\DisplayManager\DisplayManager.h" />
     <ClInclude Include="Managers\RenderManager\RenderManager.h" />
     <ClInclude Include="Managers\SceneManager\SceneManager.h" />

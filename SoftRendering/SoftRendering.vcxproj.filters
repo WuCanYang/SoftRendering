@@ -101,5 +101,8 @@
     <ClInclude Include="Math\Matrix3X3.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Managers\DisplayManager\Buffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
