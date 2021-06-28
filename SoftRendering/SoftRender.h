@@ -2,6 +2,7 @@
 #include "Managers/SceneManager/SceneManager.h"
 #include "Managers/RenderManager/RenderManager.h"
 #include "Managers/DisplayManager/DisplayManager.h"
+#include <windows.h>
 
 class SoftRender
 {
@@ -10,6 +11,6 @@ class SoftRender
 	DisplayManager displayManager;
 
 public:
-	void Init();
+	void Init(HWND hwnd);
 	void frame();
 };

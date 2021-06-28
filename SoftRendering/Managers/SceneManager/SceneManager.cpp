@@ -6,7 +6,9 @@
 
 SceneManager::SceneManager(): renderManager(nullptr), camera(nullptr), light(nullptr)
 {
-	loadModel("");
+	std::cout << "Scene loading" << std::endl;
+
+	loadModel("C:\\Users\\canyangwu\\Desktop\\SoftRendering\\Models\\spot.obj");
 	loadLight();
 	loadCamera();
 }
@@ -44,7 +46,7 @@ void SceneManager::loadCamera()
 	camera->Position = Vector3(0.0f, 3.0f, 3.0f);
 	if (!models.empty())
 	{
-		camera->Target = models[0]->Position;
+		camera->Target = Vector3(0.0f); //models[0]->Position;
 	}
 }
 

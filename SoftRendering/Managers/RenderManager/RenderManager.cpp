@@ -18,6 +18,9 @@ void RenderManager::loadSceneResources()
 	models = sceneManager->GetSceneModels();
 	light = sceneManager->GetLight();
 	camera = sceneManager->GetCamera();
+
+	shader.light = light;
+	shader.camera = camera;
 }
 
 void RenderManager::frame()
@@ -30,6 +33,8 @@ void RenderManager::frame()
 
 	for (Model* model : *models)
 	{
+		shader.texture = model->modelTexture;
+
 		std::vector<Vector3>& Vertices = model->Vertices;
 		std::vector<Vector2>& TexCoords = model->TexCoords;
 		std::vector<Vector3>& Normals = model->Normals;

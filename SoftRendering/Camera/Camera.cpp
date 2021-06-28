@@ -40,8 +40,8 @@ Matrix4X4 Camera::GetPerspectiveMatrix()
 
 	m.m11 = 1.0f / (aspect * tanHalfFov);
 	m.m22 = 1.0f / (tanHalfFov);
-	m.m33 = (near + far) / (near - far);
-	m.m34 = 2 * near * far / (near - far);
+	m.m33 = (_near + _far) / (_near - _far);
+	m.m34 = 2 * _near * _far / (_near - _far);
 	m.m43 = -1.0f;
 
 	return m;

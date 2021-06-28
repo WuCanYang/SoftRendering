@@ -15,48 +15,6 @@
 
 #include "stb_image.h"
 
-struct Material
-{
-	Material()
-	{
-		name;
-		Ns = 0.0f;
-		Ni = 0.0f;
-		d = 0.0f;
-		illum = 0;
-	}
-
-	// Material Name
-	std::string name;
-	// Ambient Color
-	Vector3 Ka;
-	// Diffuse Color
-	Vector3 Kd;
-	// Specular Color
-	Vector3 Ks;
-	// Specular Exponent
-	float Ns;
-	// Optical Density
-	float Ni;
-	// Dissolve
-	float d;
-	// Illumination
-	int illum;
-	// Ambient Texture Map
-	std::string map_Ka;
-	// Diffuse Texture Map
-	std::string map_Kd;
-	// Specular Texture Map
-	std::string map_Ks;
-	// Specular Hightlight Map
-	std::string map_Ns;
-	// Alpha Texture Map
-	std::string map_d;
-	// Bump Map
-	std::string map_bump;
-};
-
-
 // Namespace: Math
 //
 // Description: The namespace that holds all of the math
@@ -332,6 +290,10 @@ public:
 			}
 		}
 
+		std::cout << "Vertices Nums:  " << model->Vertices.size() << std::endl;
+		std::cout << "Faces Nums:   " << model->VerticesIndices.size() << std::endl;
+
+
 		stbi_set_flip_vertically_on_load(true);
 
 		std::string texName = Path.substr(0, Path.length() - 4) + ".png";
@@ -340,6 +302,7 @@ public:
 		if (data)
 		{
 			model->modelTexture = new Texture(data, width, heght, channel);
+			std::cout << "Texture Channel:  " << channel << std::endl;
 		}
 		else
 		{

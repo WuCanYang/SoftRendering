@@ -2,12 +2,16 @@
 #include <stdlib.h> 
 #include <string.h> 
 #include <tchar.h> 
+#include <iostream>
+#include "SoftRender.h"
+#include "Model/Constant.h"
+
 
 // ------------------------Global variables---------------------------------
 // 主窗体类名
-static TCHAR szWindowClass[] = _T("win32app");
+static TCHAR szWindowClass[] = _T("SoftRender");
 // 应用程序标题栏处出现的字符串
-static TCHAR szTitle[] = _T("Win32 Guided Tour Application");
+static TCHAR szTitle[] = _T("SoftRender");
 
 //HINSTANCE 是Windows里的一中数据类型，是用于标示（记录）一个程序的实例。
 //它与HMODULE是一样的（通用的，这两种类型最终就是32位无符号长整形）。
@@ -69,16 +73,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// hInstance: the first parameter from WinMain 
 	// NULL: not used in this application 
 	// 返回的HWND是一个窗口的句柄
-	HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, NULL);
+	HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, hInstance, NULL);
 	if (!hWnd) {
 		MessageBox(NULL, _T("Call to CreateWindow failed!"), _T("Win32 Guided Tour"), NULL);
 		return 1;
 	}
 
+	AllocConsole();
+	freopen("conout$", "w", stdout);
+	freopen("conout$", "w", stderr);
 
-	// ShowWindow 函数的参数解释: 
-	// hWnd: CreateWindow函数返回的窗口句柄 
-	// nCmdShow: the fourth parameter from WinMain 
+	SoftRender engine;
+	engine.Init(hWnd);
+	bool exit = false;
+
+
+
 	ShowWindow(hWnd, nCmdShow);
 	// UpdateWindow函数用于更新窗口指定的区域
 	// 如果窗口更新的区域不为空，UpdateWindow函数就发送一个WM_PAINT消息来更新指定窗口的客户区。
@@ -90,9 +100,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 添加用于侦听操作系统所发送消息的消息循环。 
 	// 当应用程序收到一条消息时，此循环将该消息调度到 WndProc 函数以进行处理。 
 	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg); //翻译消息
-		DispatchMessage(&msg);  //派遣消息
+	while (!exit) {
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT) exit = true;
+			else
+			{
+				TranslateMessage(&msg); //翻译消息
+				DispatchMessage(&msg);  //派遣消息
+			}
+		}
+		else
+		{
+			engine.frame();
+		}
 	}
 	return (int)msg.wParam;
 }
@@ -106,7 +127,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	HDC hdc;
 	TCHAR greeting[] = _T("Hello, World!");
 	switch (message) {
-	case WM_PAINT:
+	/*case WM_PAINT:
 		//要处理 WM_PAINT 消息，首先应调用 BeginPaint
 		//然后处理所有的逻辑以及在窗口中布局文本、按钮和其他控件等
 		//然后调用 EndPaint。 
@@ -119,7 +140,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		// -----------------------布局模块结束----------------------------------
 
 		EndPaint(hWnd, &ps);
-		break;
+		break;*/
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
