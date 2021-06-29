@@ -44,6 +44,7 @@ public:
 		Vector3 interX2 = GetTexturePixel(index2) * (weight) + GetTexturePixel(index3) * (1.0f - weight);
 
 		weight = (float)y2 - v * (float)(height - 1);
-		return interX1 * (weight) + interX2 * (1.0f - weight);
+		Vector3 interY = interX1 * (weight)+interX2 * (1.0f - weight);
+		return Vector3(interY.x() / 255, interY.y() / 255, interY.z() / 255);
 	}
 };

@@ -3,6 +3,7 @@
 #include "../Model/Light.h"
 #include "../Model/Texture.h"
 #include "../Camera/Camera.h"
+#include <iostream>
 
 void Shader::VertexShader(Matrix4X4& model, Matrix4X4& view, Matrix4X4& projection, 
 	std::vector<Vector3>& Vertices, std::vector<Vector3>& Normals, 
@@ -28,16 +29,16 @@ Vector3 Shader::FragmentShader(Vector3& FragPos, Vector3& Normal, Vector2& TexCo
 	Vector3 Color = texture->texture2D(TexCoord.x(), TexCoord.y());
 	Normal.Normalize();
 
-	Vector3 ambient = light->Color * 0.01f;
+	Vector3 ambient = light->Color * 0.15f;
 
 	Vector3 lightDir = light->Position - FragPos;
 	lightDir.Normalize();
-	Vector3 diffuse = light->Color * std::max(0.0f, lightDir.dot(Normal)) * 0.1f;
+	Vector3 diffuse = light->Color * std::max(0.0f, lightDir.dot(Normal)) * 1.0f;
 
 	Vector3 viewDir = camera->Position - FragPos;
 	Vector3 halfDir = lightDir + viewDir;
 	halfDir.Normalize();
-	Vector3 specular = light->Color * pow(std::max(0.0f, halfDir.dot(Normal)), 64.0f) * 0.1f;
+	Vector3 specular = light->Color * pow(std::max(0.0f, halfDir.dot(Normal)), 64.0f) * 1.0f;
 
 	Vector3 lighting(ambient + diffuse + specular);
 	return Vector3(Color.x() * lighting.x(), Color.y() * lighting.y(), Color.z() * lighting.z());

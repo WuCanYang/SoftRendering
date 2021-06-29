@@ -50,4 +50,6 @@ public:
 	void Rasterization(class Triangle& triangle, class Shader& shader);
 
 	void frame();
+
+	
 };

@@ -11,7 +11,7 @@ public:
 
 	Vector3 Color;
 
-	Light() : Color(0.1f) {}
+	Light() : Color(1.0f) {}
 
 	void update();	//对光源做一些运动
 

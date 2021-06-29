@@ -2,6 +2,7 @@
 #include "../SceneManager/SceneManager.h"
 #include "../DisplayManager/DisplayManager.h"
 #include "../../Model/Constant.h"
+#include <iostream>
 
 void RenderManager::setSceneManager(SceneManager* sm)
 {
