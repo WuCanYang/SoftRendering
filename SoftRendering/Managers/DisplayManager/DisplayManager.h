@@ -12,7 +12,7 @@ class DisplayManager  //光栅化阶段
 	FrameBuffer* back;
 
 	DepthBuffer* depthBuffer;
-	DepthBuffer* shadowDepthBuffer;
+	DepthBuffer* ShadowMap;
 
 
 	//显示所需
@@ -40,14 +40,21 @@ class DisplayManager  //光栅化阶段
 	void writeDepth(int x, int y, float depth);
 	void writeFrameBuffer(int x, int y, unsigned char& r, unsigned char& g, unsigned char& b);
 
+	float readShadowMap(int x, int y);
+	void writeShadowMap(int x, int y, float depth);
+
 public:
 	~DisplayManager();
 
 	void Init(RenderManager* rm, HWND hwnd);
 
+	void ClearShadowMap();
 	void ClearBuffer();
 	void SwapBuffer();
+	DepthBuffer* GetShadowMap();
+
 	void Rasterization(class Triangle& triangle, class Shader& shader);
+	void Rasterization_ShadowMap(class Triangle& triangle);  //获取shadow map
 
 	void frame();
 

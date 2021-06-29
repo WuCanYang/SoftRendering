@@ -21,6 +21,8 @@ private:
 	void loadLight();
 	void loadCamera();
 
+	void loadPlane();  //阴影模式下用于阴影的呈现
+
 public:
 	SceneManager();
 	~SceneManager();

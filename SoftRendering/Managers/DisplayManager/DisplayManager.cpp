@@ -12,7 +12,7 @@ DisplayManager::~DisplayManager()
 	delete front;
 	delete back;
 	delete depthBuffer;
-	delete shadowDepthBuffer;
+	delete ShadowMap;
 
 	releasePalette();
 	releaseDIB(dibDC);
@@ -41,10 +41,10 @@ void DisplayManager::Init(RenderManager* rm, HWND hwnd)
 	depthBuffer->width = SCREEN_WIDTH;
 	depthBuffer->data = new float[SCREEN_WIDTH * SCREEN_HEIGHT];
 
-	shadowDepthBuffer = new DepthBuffer;
-	shadowDepthBuffer->height = SCREEN_HEIGHT;
-	shadowDepthBuffer->width = SCREEN_WIDTH;
-	shadowDepthBuffer->data = new float[SCREEN_WIDTH * SCREEN_HEIGHT];
+	ShadowMap = new DepthBuffer;
+	ShadowMap->height = SHADOW_HEIGHT;
+	ShadowMap->width = SHADOW_WIDTH;
+	ShadowMap->data = new float[SHADOW_WIDTH * SHADOW_HEIGHT];
 
 
 	this->hwnd = hwnd;
@@ -72,6 +72,14 @@ void DisplayManager::ClearBuffer()
 	for (int i = 0; i < depthBuffer->height * depthBuffer->width; ++i)
 	{
 		depthBuffer->data[i] = 1.0f;
+	}
+}
+
+void DisplayManager::ClearShadowMap()
+{
+	for (int i = 0; i < ShadowMap->height * ShadowMap->width; ++i)
+	{
+		ShadowMap->data[i] = 1.0f;
 	}
 }
 
@@ -154,6 +162,23 @@ void DisplayManager::writeDepth(int x, int y, float depth)
 	depthBuffer->data[index] = depth;
 }
 
+float DisplayManager::readShadowMap(int x, int y)
+{
+	int index = y * SHADOW_WIDTH + x;
+	return ShadowMap->data[index];
+}
+
+void DisplayManager::writeShadowMap(int x, int y, float depth)
+{
+	int index = y * SHADOW_HEIGHT + x;
+	ShadowMap->data[index] = depth;
+}
+
+DepthBuffer* DisplayManager::GetShadowMap()
+{
+	return ShadowMap;
+}
+
 void DisplayManager::convertToRGB(Vector3& color, unsigned char& r, unsigned char& g, unsigned char& b)
 {
 	float red = color.x() * 255;
@@ -214,6 +239,36 @@ void DisplayManager::Rasterization(Triangle& triangle, Shader& shader)
 				unsigned char r, g, b;
 				convertToRGB(color, r, g, b);
 				writeFrameBuffer(i, j, r, g, b);
+			}
+		}
+	}
+}
+
+void DisplayManager::Rasterization_ShadowMap(Triangle& triangle)
+{
+	float minX = min(triangle.va.Position.x(), min(triangle.vb.Position.x(), triangle.vc.Position.x()));
+	float minY = min(triangle.va.Position.y(), min(triangle.vb.Position.y(), triangle.vc.Position.y()));
+	float maxX = max(triangle.va.Position.x(), max(triangle.vb.Position.x(), triangle.vc.Position.x()));
+	float maxY = max(triangle.va.Position.y(), max(triangle.vb.Position.y(), triangle.vc.Position.y()));
+
+	int startX = max(0, (int)minX);
+	int startY = max(0, (int)minY);
+	int endX = min(SHADOW_WIDTH - 1, (int)(maxX + 0.5f));
+	int endY = min(SHADOW_HEIGHT - 1, (int)(maxY + 0.5f));
+
+	for (int j = startY; j <= endY; ++j)
+	{
+		for (int i = startX; i <= endX; ++i)
+		{
+			Vector3 point((float)i + 0.5f, (float)j + 0.5f, 1.0f);
+			if (!pointInTriangle(point, triangle)) continue;
+
+			Vector3 Coords = computeBarycentricCoords(point, triangle);
+			float depth = Coords.x() * triangle.va.Position.z() + Coords.y() * triangle.vb.Position.z() + Coords.z() * triangle.vc.Position.z();
+
+			if (depth < readShadowMap(i, j))
+			{
+				writeShadowMap(i, j, depth);
 			}
 		}
 	}

@@ -15,7 +15,7 @@ Model::~Model()
 
 void Model::update()
 {
-	Rotation._y += 10.0f;
+	if(modelTexture != nullptr) Rotation._y += 10.0f;
 }
 
 Matrix4X4 Model::ScaleMatrix()

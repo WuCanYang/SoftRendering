@@ -19,18 +19,12 @@ void RenderManager::loadSceneResources()
 	models = sceneManager->GetSceneModels();
 	light = sceneManager->GetLight();
 	camera = sceneManager->GetCamera();
-
-	shader.light = light;
-	shader.camera = camera;
 }
 
-void RenderManager::frame()
+void RenderManager::Render(Shader& shader)
 {
-	loadSceneResources();
 	Matrix4X4 view = camera->GetViewMatrix();
 	Matrix4X4 projection = camera->GetPerspectiveMatrix();
-
-	displayManager->ClearBuffer();
 
 	for (Model* model : *models)
 	{
@@ -91,8 +85,92 @@ void RenderManager::frame()
 			displayManager->Rasterization(triangle, shader);
 		}
 	}
-	
+}
+
+void RenderManager::GeneralMode()
+{
+	loadSceneResources();
+	Shader shader;
+	shader.light = light;
+	shader.camera = camera;
+
+	displayManager->ClearBuffer();
+	Render(shader);
 	displayManager->SwapBuffer();
+}
+
+void RenderManager::RenderingShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection)
+{
+	for (Model* model : *models)
+	{
+		std::vector<Vector3>& Vertices = model->Vertices;
+		std::vector<Index3I>& VerticesIndices = model->VerticesIndices;
+
+		Matrix4X4 modelMatrix = model->GetModelMatrix();
+		std::vector<Vector4> ClipVertices;
+		for (int i = 0; i < Vertices.size(); ++i)  // MVP
+		{
+			Vector4 ClipVert = lightSpaceProjection * lightSpaceView * modelMatrix * Vector4(Vertices[i]);
+			ClipVertices.push_back(ClipVert);
+		}
+
+		for (int i = 0; i < ClipVertices.size(); ++i) //透视除法   -1 ~ 1
+		{
+			ClipVertices[i]._x /= ClipVertices[i]._w;
+			ClipVertices[i]._y /= ClipVertices[i]._w;
+			ClipVertices[i]._z /= ClipVertices[i]._w;
+		}
+
+		for (int i = 0; i < ClipVertices.size(); ++i) //视口变换
+		{
+			ClipVertices[i]._x = (ClipVertices[i]._x + 1) * 0.5f * (SHADOW_WIDTH - 1);
+			ClipVertices[i]._y = (ClipVertices[i]._y + 1) * 0.5f * (SHADOW_HEIGHT - 1);
+		}
+
+		for (int i = 0; i < VerticesIndices.size(); ++i) //设置三角形
+		{
+			Index3I& VertexIndex = VerticesIndices[i];
+
+			Triangle triangle;
+			triangle.va.Position = ClipVertices[VertexIndex.index[0]];
+			triangle.vb.Position = ClipVertices[VertexIndex.index[1]];
+			triangle.vc.Position = ClipVertices[VertexIndex.index[2]];
+
+			displayManager->Rasterization_ShadowMap(triangle);
+		}
+	}
+}
+
+void RenderManager::RenderingScene_ShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection)
+{
+	ShadowMapShader shader;
+	shader.light = light;
+	shader.camera = camera;
+	shader.ShadowMap = displayManager->GetShadowMap();
+	shader.lightSpaceView = lightSpaceView;
+	shader.lightSpaceProjection = lightSpaceProjection;
+
+	Render(shader);
+}
+
+void RenderManager::ShadowMode()
+{
+	loadSceneResources();
+	Matrix4X4 lightSpaceView = light->GetViewMatrix();
+	Matrix4X4 lightSpaceProjection = light->GetOrthoMatrix(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
+
+	displayManager->ClearShadowMap();
+	RenderingShadowMap(lightSpaceView, lightSpaceProjection);
+
+	displayManager->ClearBuffer();
+	RenderingScene_ShadowMap(lightSpaceView, lightSpaceProjection);
+	displayManager->SwapBuffer();
+}
+
+void RenderManager::frame()
+{
+	if (GENERAL) GeneralMode();
+	else if (SHADOW) ShadowMode();
 }
 
 

@@ -17,11 +17,19 @@ class RenderManager  //几何阶段
 	Light* light;
 	Camera* camera;
 
-	Shader shader;
-
 	void loadSceneResources();
 
+	void Render(class Shader& shader);		//提取出来的general模式和shadow模式中公共的部分
+	void GeneralMode();
+
+	void RenderingShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection); //用于阴影模式得到shadowmap
+	void RenderingScene_ShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection);	 //使用shadowmap渲染场景
+	void ShadowMode();
+
+
 public:
+
+	RenderManager() :models(nullptr), light(nullptr), camera(nullptr) {}
 
 	void setSceneManager(SceneManager* sm);
 	void setDisplayManager(DisplayManager* dm);

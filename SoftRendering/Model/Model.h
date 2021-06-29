@@ -8,6 +8,14 @@
 struct Index3I
 {
 	int index[3];
+
+	Index3I() {}
+	Index3I(int a, int b, int c)
+	{
+		index[0] = a;
+		index[1] = b;
+		index[2] = c;
+	}
 };
 
 class Model

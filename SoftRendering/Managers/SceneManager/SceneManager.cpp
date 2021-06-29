@@ -3,14 +3,20 @@
 #include "Model/Model.h"
 #include "Model/Light.h"
 #include "Model/OBJ_Loader.h"
+#include <Model/Constant.h>
 
 SceneManager::SceneManager(): renderManager(nullptr), camera(nullptr), light(nullptr)
 {
 	std::cout << "Scene loading" << std::endl;
 
-	loadModel("C:\\Users\\canyangwu\\Desktop\\SoftRendering\\Models\\spot.obj");
+	loadModel("../Models/spot.obj");
 	loadLight();
 	loadCamera();
+
+	if (SHADOW && !GENERAL && !WIREFRAME)
+	{
+		loadPlane();
+	}
 }
 
 SceneManager::~SceneManager()
@@ -21,6 +27,39 @@ SceneManager::~SceneManager()
 	}
 	delete light;
 	delete camera;
+}
+
+void SceneManager::loadPlane()
+{
+	Model* m = new Model;
+	m->Position = Vector3(0.0f, -0.5f, 0.0f);
+	m->Scale = Vector3(2.0f, 2.0f, 2.0f);
+
+	m->Vertices.push_back(Vector3(-1.0f, 0.0f, -1.0f));
+	m->Vertices.push_back(Vector3(1.0f, 0.0f, -1.0f));
+	m->Vertices.push_back(Vector3(1.0f, 0.0f, 1.0f));
+	m->Vertices.push_back(Vector3(-1.0f, 0.0f, 1.0f));
+
+	m->TexCoords.push_back(Vector2(-1.0f, -1.0f));
+	m->TexCoords.push_back(Vector2(1.0f, -1.0f));
+	m->TexCoords.push_back(Vector2(1.0f, 1.0f));
+	m->TexCoords.push_back(Vector2(-1.0f, 1.0f));
+
+	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
+	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
+	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
+	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
+
+	m->VerticesIndices.push_back(Index3I(0, 1, 2));
+	m->VerticesIndices.push_back(Index3I(0, 2, 3));
+
+	m->TexCoordsIndices.push_back(Index3I(0, 1, 2));
+	m->TexCoordsIndices.push_back(Index3I(0, 2, 3));
+
+	m->NormalsIndices.push_back(Index3I(0, 1, 2));
+	m->NormalsIndices.push_back(Index3I(0, 2, 3));
+
+	models.push_back(m);
 }
 
 void SceneManager::loadModel(std::string name)
@@ -78,4 +117,3 @@ Camera* SceneManager::GetCamera()
 {
 	return camera;
 }
-
