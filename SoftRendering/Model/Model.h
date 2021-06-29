@@ -2,7 +2,7 @@
 
 #include "Triangle.h"
 #include "Texture.h"
-#include "../Math/Matrix4X4.h"
+#include "Math/Matrix4X4.h"
 #include <vector>
 
 struct Index3I

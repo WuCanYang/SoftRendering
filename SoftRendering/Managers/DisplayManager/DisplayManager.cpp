@@ -1,10 +1,10 @@
 #include "DisplayManager.h"
-#include "../RenderManager/RenderManager.h"
-#include "../../Model/Triangle.h"
-#include "../../Shader/Shader.h"
-#include "../../Model/Constant.h"
-#include "../../Model/Light.h"
-#include "../../Camera/Camera.h"
+#include "Managers/RenderManager/RenderManager.h"
+#include "Model/Triangle.h"
+#include "Shader/Shader.h"
+#include "Model/Constant.h"
+#include "Model/Light.h"
+#include "Camera/Camera.h"
 
 
 DisplayManager::~DisplayManager()
@@ -18,6 +18,7 @@ DisplayManager::~DisplayManager()
 	releaseDIB(dibDC);
 	DeleteDC(dibDC);
 	ReleaseDC(hwnd, hdc);
+
 }
 
 
@@ -182,12 +183,12 @@ void DisplayManager::Rasterization(Triangle& triangle, Shader& shader)
 
 	int startX = max(0, (int)minX);
 	int startY = max(0, (int)minY);
-	int endX = min(SCREEN_HEIGHT - 1, (int)(maxX + 0.5f));
-	int endY = min(SCREEN_WIDTH - 1, (int)(maxY + 0.5f));
+	int endX = min(SCREEN_WIDTH - 1, (int)(maxX + 0.5f));
+	int endY = min(SCREEN_HEIGHT - 1, (int)(maxY + 0.5f));
 
-	for (int i = startX; i <= endX; ++i)
+	for (int j = startY; j <= endY; ++j)
 	{
-		for (int j = startY; j <= endY; ++j)
+		for (int i = startX; i <= endX; ++i)
 		{
 			Vector3 point((float)i + 0.5f, (float)j + 0.5f, 1.0f);
 			if (!pointInTriangle(point, triangle)) continue;

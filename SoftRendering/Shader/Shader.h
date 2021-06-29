@@ -1,7 +1,7 @@
 #pragma once
-#include "../Math/Matrix4X4.h"
-#include "../Math/Vector3.h"
-#include "../Math/Vector2.h"
+#include "Math/Matrix4X4.h"
+#include "Math/Vector3.h"
+#include "Math/Vector2.h"
 #include <vector>
 
 class Shader

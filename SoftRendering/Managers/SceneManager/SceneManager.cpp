@@ -1,8 +1,8 @@
 #include "SceneManager.h"
-#include "../RenderManager/RenderManager.h"
-#include "../../Model/Model.h"
-#include "../../Model/Light.h"
-#include "../../Model/OBJ_Loader.h"
+#include "Managers/RenderManager/RenderManager.h"
+#include "Model/Model.h"
+#include "Model/Light.h"
+#include "Model/OBJ_Loader.h"
 
 SceneManager::SceneManager(): renderManager(nullptr), camera(nullptr), light(nullptr)
 {

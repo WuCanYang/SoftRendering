@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
-#include "../../Model/Model.h"
-#include "../../Model/Light.h"
-#include "../../Camera/Camera.h"
-#include "../../Shader/Shader.h"
+#include "Model/Model.h"
+#include "Model/Light.h"
+#include "Camera/Camera.h"
+#include "Shader/Shader.h"
 
 class SceneManager;
 class DisplayManager;

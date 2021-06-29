@@ -1,8 +1,8 @@
 #include "Shader.h"
-#include "../Math/Matrix3X3.h"
-#include "../Model/Light.h"
-#include "../Model/Texture.h"
-#include "../Camera/Camera.h"
+#include "Math/Matrix3X3.h"
+#include "Model/Light.h"
+#include "Model/Texture.h"
+#include "Camera/Camera.h"
 #include <iostream>
 
 void Shader::VertexShader(Matrix4X4& model, Matrix4X4& view, Matrix4X4& projection, 

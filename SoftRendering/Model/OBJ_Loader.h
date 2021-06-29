@@ -5,9 +5,9 @@
 #include <string>
 #include <fstream>
 #include <math.h>
-#include "../Math/Vector2.h"
-#include "../Model/Model.h"
-#include "../Model/Texture.h"
+#include "Math/Vector2.h"
+#include "Model/Model.h"
+#include "Model/Texture.h"
 
 // Print progress to console while loading (large models)
 #define OBJL_CONSOLE_OUTPUT
