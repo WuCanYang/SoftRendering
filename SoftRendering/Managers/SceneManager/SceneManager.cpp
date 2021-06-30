@@ -32,8 +32,8 @@ SceneManager::~SceneManager()
 void SceneManager::loadPlane()
 {
 	Model* m = new Model;
-	m->Position = Vector3(0.0f, -0.5f, 0.0f);
-	m->Scale = Vector3(2.0f, 2.0f, 2.0f);
+	m->Position = Vector3(0.0f, -1.3f, 0.0f);
+	m->Scale = Vector3(3.0f);
 
 	m->Vertices.push_back(Vector3(-1.0f, 0.0f, -1.0f));
 	m->Vertices.push_back(Vector3(1.0f, 0.0f, -1.0f));
@@ -72,17 +72,82 @@ void SceneManager::loadModel(std::string name)
 void SceneManager::loadLight()
 {
 	light = new Light;
-	light->Position = Vector3(3.0f, 3.0f, 0.0f);
+	light->Position = Vector3(1.0f, 3.0f, -1.0f);
 	if (!models.empty())
 	{
-		light->Direction = light->Position - models[0]->Position;
+		light->Direction = light->Position - Vector3();//models[0]->Position;
+	}
+
+	Model* m = new Model;		//为光源添加顶点数据等，用于光源可视化
+	m->Position = light->Position;
+	m->Scale = Vector3(0.1f);
+	light->mesh = m;
+
+	float vertices[] = {		//cube数据  P/N/T
+		// back face
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+		// front face
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		// left face
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		// right face
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+		// bottom face
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		// top face
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+		 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+	};
+
+	for (int i = 0; i < 36; ++i)
+	{
+		int index = i * 8;
+		m->Vertices.push_back(Vector3(vertices[index], vertices[index+1], vertices[index + 2]));
+		m->Normals.push_back(Vector3(vertices[index + 3], vertices[index + 4], vertices[index + 5]));
+		m->TexCoords.push_back(Vector2(vertices[index + 6], vertices[index + 7]));
+
+		if ((i + 1) % 3 == 0)
+		{
+			m->VerticesIndices.push_back(Index3I(i - 2, i - 1, i));
+			m->TexCoordsIndices.push_back(Index3I(i - 2, i - 1, i));
+			m->NormalsIndices.push_back(Index3I(i - 2, i - 1, i));
+		}
 	}
 }
 
 void SceneManager::loadCamera()
 {
 	camera = new Camera;
-	camera->Position = Vector3(0.0f, 3.0f, 3.0f);
+	camera->Position = Vector3(0.0f, 5.0f, 3.0f);
 	if (!models.empty())
 	{
 		camera->Target = Vector3(0.0f); //models[0]->Position;

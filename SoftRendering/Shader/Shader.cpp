@@ -55,12 +55,13 @@ float ShadowMapShader::CalculateShadow(Vector4& FragPosLightSpace)
 
 	int x = (FragPosLightSpace._x + 1) * 0.5f * (ShadowMap->width - 1);
 	int y = (FragPosLightSpace._y + 1) * 0.5f * (ShadowMap->height - 1);
+	y = ShadowMap->height - 1 - y;
 
 	int index = y * ShadowMap->width + x;
 	float depth = ShadowMap->data[index];
 	float curDepth = FragPosLightSpace._z;
 
-	float shadow = curDepth /*- 0.005f*/ > depth ? 1.0f : 0.0f;
+	float shadow = curDepth - 0.01f > depth ? 1.0f : 0.0f;
 	return shadow;
 }
 
@@ -69,7 +70,7 @@ Vector3 ShadowMapShader::FragmentShader(Vector3& FragPos, Vector3& Normal, Vecto
 	Vector3 Color = texture == nullptr ? Vector3(1.0f) : texture->texture2D(TexCoord.x(), TexCoord.y());
 	Normal.Normalize();
 
-	Vector3 ambient = light->Color * 0.15f;
+	Vector3 ambient = light->Color * 0.2f;
 
 	Vector3 lightDir = light->Position - FragPos;
 	lightDir.Normalize();

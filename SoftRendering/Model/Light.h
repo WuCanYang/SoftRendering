@@ -11,7 +11,15 @@ public:
 
 	Vector3 Color;
 
-	Light() : Color(1.0f) {}
+
+	class Model* mesh; //用于光源可视化显示， 一个cube
+
+
+	Light() : Color(1.0f), mesh(nullptr) {}
+	~Light()
+	{
+		if (mesh) delete mesh;
+	}
 
 	void update();	//对光源做一些运动
 

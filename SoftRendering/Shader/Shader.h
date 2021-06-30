@@ -21,7 +21,7 @@ public:
 };
 
 
-class ShadowMapShader : public Shader
+class ShadowMapShader : public Shader		//‰÷»æ“ı”∞
 {
 	float CalculateShadow(Vector4& FragPosLightSpace);
 
@@ -32,4 +32,15 @@ public:
 	Matrix4X4 lightSpaceProjection;
 
 	Vector3 FragmentShader(Vector3& FragPos, Vector3& Normal, Vector2& TexCoord) override;
+};
+
+
+class LightShader : public Shader			//‰÷»æπ‚‘¥
+{
+public:
+
+	Vector3 FragmentShader(Vector3& FragPos, Vector3& Normal, Vector2& TexCoord) override
+	{
+		return Vector3(1.0f);
+	}
 };

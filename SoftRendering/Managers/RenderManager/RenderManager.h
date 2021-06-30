@@ -19,11 +19,12 @@ class RenderManager  //几何阶段
 
 	void loadSceneResources();
 
-	void Render(class Shader& shader);		//提取出来的general模式和shadow模式中公共的部分
+	void Render(class Shader& shader, Model* model);		//提取出来的general模式和shadow模式中公共的部分
 	void GeneralMode();
 
 	void RenderingShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection); //用于阴影模式得到shadowmap
 	void RenderingScene_ShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection);	 //使用shadowmap渲染场景
+	void RenderingLight();		//渲染光源
 	void ShadowMode();
 
 

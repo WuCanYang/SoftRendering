@@ -5,6 +5,7 @@
 #include "Model/Constant.h"
 #include "Model/Light.h"
 #include "Camera/Camera.h"
+#include <iostream>
 
 
 DisplayManager::~DisplayManager()
@@ -88,7 +89,7 @@ void DisplayManager::SwapBuffer()
 	FrameBuffer* fb = front;
 	front = back;
 	back = fb;
-
+	
 	for (int i = 0; i < front->height; ++i)
 	{
 		for (int j = 0; j < front->width; ++j)
@@ -102,6 +103,20 @@ void DisplayManager::SwapBuffer()
 			ScreenBits[index + 2] = red;
 		}
 	}
+
+	/*for (int i = 0; i < ShadowMap->height; ++i)		//œ‘ æshadow map
+	{
+		for (int j = 0; j < ShadowMap->width; ++j)
+		{
+			float depth = ShadowMap->data[i * SHADOW_WIDTH + j];
+			unsigned char val = (unsigned char)((depth + 1) * 0.5f * 255);
+
+			int index = (i * SCREEN_WIDTH + j) * 3;
+			ScreenBits[index] = val;
+			ScreenBits[index + 1] = val;
+			ScreenBits[index + 2] = val;
+		}
+	}*/
 }
 
 bool DisplayManager::pointInTriangle(Vector3& point, Triangle& triangle)
@@ -161,16 +176,21 @@ void DisplayManager::writeDepth(int x, int y, float depth)
 	int index = y * SCREEN_WIDTH + x;
 	depthBuffer->data[index] = depth;
 }
+//---------------------------------------------------------
 
 float DisplayManager::readShadowMap(int x, int y)
 {
+	y = SHADOW_HEIGHT - 1 - y;
+
 	int index = y * SHADOW_WIDTH + x;
 	return ShadowMap->data[index];
 }
 
 void DisplayManager::writeShadowMap(int x, int y, float depth)
 {
-	int index = y * SHADOW_HEIGHT + x;
+	y = SHADOW_HEIGHT - 1 - y;
+
+	int index = y * SHADOW_WIDTH + x;
 	ShadowMap->data[index] = depth;
 }
 
