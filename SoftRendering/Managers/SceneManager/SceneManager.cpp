@@ -32,11 +32,58 @@ SceneManager::~SceneManager()
 void SceneManager::loadPlane()
 {
 	Model* m = new Model;
-	m->Position = Vector3(0.0f, -1.3f, 0.0f);
-	m->Scale = Vector3(3.0f);
+	//m->Position = Vector3(0.0f, -1.3f, 0.0f);
+	m->Position = Vector3(0.0f, -0.65f, 0.0f);
+	m->Scale = Vector3(0.5f);
 
+	/*float planeVertices[] = {
+		// positions            // normals         // texcoords
+		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
+		-5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 5.0f,
+
+		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
+		 5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,  5.0f, 5.0f,
+		-5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 5.0f
+	};*/
+
+	float planeVertices[] = {
+		// positions            // normals         // texcoords
+		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
+		-5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		 0.0f, 0.0f,  0.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+
+		-5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		 0.0f, 0.0f,  0.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 5.0f,
+
+		 0.0f, 0.0f,  0.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 5.0f,
+		 5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,  5.0f, 5.0f,
+
+		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
+		 0.0f, 0.0f,  0.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		 5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,  5.0f, 5.0f,
+	};
+
+	for (int i = 0; i < 12; ++i)
+	{
+		int index = i * 8;
+		m->Vertices.push_back(Vector3(planeVertices[index], planeVertices[index + 1], planeVertices[index + 2]));
+		m->Normals.push_back(Vector3(planeVertices[index + 3], planeVertices[index + 4], planeVertices[index + 5]));
+		m->TexCoords.push_back(Vector2(planeVertices[index + 6], planeVertices[index + 7]));
+
+		if ((i + 1) % 3 == 0)
+		{
+			m->VerticesIndices.push_back(Index3I(i - 2, i - 1, i));
+			m->TexCoordsIndices.push_back(Index3I(i - 2, i - 1, i));
+			m->NormalsIndices.push_back(Index3I(i - 2, i - 1, i));
+		}
+	}
+	models.push_back(m);
+
+	/*m->Vertices.push_back(Vector3(1.0f, 0.0f, -1.0f));
 	m->Vertices.push_back(Vector3(-1.0f, 0.0f, -1.0f));
-	m->Vertices.push_back(Vector3(1.0f, 0.0f, -1.0f));
 	m->Vertices.push_back(Vector3(1.0f, 0.0f, 1.0f));
 	m->Vertices.push_back(Vector3(-1.0f, 0.0f, 1.0f));
 
@@ -51,15 +98,13 @@ void SceneManager::loadPlane()
 	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
 
 	m->VerticesIndices.push_back(Index3I(0, 1, 2));
-	m->VerticesIndices.push_back(Index3I(0, 2, 3));
+	m->VerticesIndices.push_back(Index3I(1, 2, 3));
 
 	m->TexCoordsIndices.push_back(Index3I(0, 1, 2));
-	m->TexCoordsIndices.push_back(Index3I(0, 2, 3));
+	m->TexCoordsIndices.push_back(Index3I(1, 2, 3));
 
 	m->NormalsIndices.push_back(Index3I(0, 1, 2));
-	m->NormalsIndices.push_back(Index3I(0, 2, 3));
-
-	models.push_back(m);
+	m->NormalsIndices.push_back(Index3I(1, 2, 3));*/
 }
 
 void SceneManager::loadModel(std::string name)
@@ -72,7 +117,8 @@ void SceneManager::loadModel(std::string name)
 void SceneManager::loadLight()
 {
 	light = new Light;
-	light->Position = Vector3(1.0f, 3.0f, -1.0f);
+	//light->Position = Vector3(1.0f, 3.0f, -1.0f);
+	light->Position = Vector3(-1.0f, 3.0f, -2.0f);
 	if (!models.empty())
 	{
 		light->Direction = light->Position - Vector3();//models[0]->Position;

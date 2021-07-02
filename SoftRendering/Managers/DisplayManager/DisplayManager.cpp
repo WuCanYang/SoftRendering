@@ -89,7 +89,8 @@ void DisplayManager::SwapBuffer()
 	FrameBuffer* fb = front;
 	front = back;
 	back = fb;
-	
+
+#if 1
 	for (int i = 0; i < front->height; ++i)
 	{
 		for (int j = 0; j < front->width; ++j)
@@ -104,19 +105,21 @@ void DisplayManager::SwapBuffer()
 		}
 	}
 
-	/*for (int i = 0; i < ShadowMap->height; ++i)		//显示shadow map
+#else
+	for (int i = 0; i < ShadowMap->height; ++i)		//显示shadow map
 	{
 		for (int j = 0; j < ShadowMap->width; ++j)
 		{
 			float depth = ShadowMap->data[i * SHADOW_WIDTH + j];
-			unsigned char val = (unsigned char)((depth + 1) * 0.5f * 255);
+			unsigned char val = (unsigned char)(depth * 255);
 
 			int index = (i * SCREEN_WIDTH + j) * 3;
 			ScreenBits[index] = val;
 			ScreenBits[index + 1] = val;
 			ScreenBits[index + 2] = val;
 		}
-	}*/
+	}
+#endif
 }
 
 bool DisplayManager::pointInTriangle(Vector3& point, Triangle& triangle)
@@ -204,9 +207,9 @@ void DisplayManager::convertToRGB(Vector3& color, unsigned char& r, unsigned cha
 	float red = color.x() * 255;
 	float green = color.y() * 255;
 	float blue = color.z() * 255;
-	r = red > 255 ? 255 : red;
-	g = green > 255 ? 255 : green;
-	b = blue > 255 ? 255 : blue;
+	r = red > 255.0f ? 255 : (unsigned char)red;
+	g = green > 255.0f ? 255 : (unsigned char)green;
+	b = blue > 255.0f ? 255 : (unsigned char)blue;
 }
 
 void DisplayManager::writeFrameBuffer(int x, int y, unsigned char& r, unsigned char& g, unsigned char& b)
@@ -235,7 +238,53 @@ void DisplayManager::Rasterization(Triangle& triangle, Shader& shader)
 	{
 		for (int i = startX; i <= endX; ++i)
 		{
-			Vector3 point((float)i + 0.5f, (float)j + 0.5f, 1.0f);
+			Vector3 point((float)i, (float)j, 1.0f);
+			if (!pointInTriangle(point, triangle)) continue;
+
+			Vector3 Coords = computeBarycentricCoords(point, triangle);
+			Vector3 zVal(1.0f / triangle.va.Position.z(), 1.0f / triangle.vb.Position.z(), 1.0f / triangle.vc.Position.z());
+
+			float depth = 1.0f / (Coords.dot(zVal));		//透视矫正
+			if (depth < readDepth(i, j))
+			{
+				writeDepth(i, j, depth);
+
+				Vector2 interpolateTexCoord = (triangle.va.TextureCoordinate * Coords.x() * zVal.x() + triangle.vb.TextureCoordinate * Coords.y() * zVal.y()
+					+ triangle.vc.TextureCoordinate * Coords.z() * zVal.z()) *depth;
+
+				Vector3 interpolateFragPos = (triangle.va.WorldPos * Coords.x() * zVal.x() + triangle.vb.WorldPos * Coords.y() * zVal.y()
+					+ triangle.vc.WorldPos * Coords.z() * zVal.z()) *depth;
+
+				Vector3 interpolateNormal = (triangle.va.WorldNormal * Coords.x() * zVal.x() + triangle.vb.WorldNormal * Coords.y() * zVal.y()
+					+ triangle.vc.WorldNormal * Coords.z() * zVal.z()) * depth;
+
+				Vector3 color = shader.FragmentShader(interpolateFragPos, interpolateNormal, interpolateTexCoord);
+
+				unsigned char r, g, b;
+				convertToRGB(color, r, g, b);
+				writeFrameBuffer(i, j, r, g, b);
+			}
+		}
+	}
+}
+
+void DisplayManager::Rasterization_ShadowMapMode(Triangle& triangle, ShadowMapShader& shader)
+{
+	float minX = min(triangle.va.Position.x(), min(triangle.vb.Position.x(), triangle.vc.Position.x()));
+	float minY = min(triangle.va.Position.y(), min(triangle.vb.Position.y(), triangle.vc.Position.y()));
+	float maxX = max(triangle.va.Position.x(), max(triangle.vb.Position.x(), triangle.vc.Position.x()));
+	float maxY = max(triangle.va.Position.y(), max(triangle.vb.Position.y(), triangle.vc.Position.y()));
+
+	int startX = max(0, (int)minX);
+	int startY = max(0, (int)minY);
+	int endX = min(SCREEN_WIDTH - 1, (int)(maxX + 0.5f));
+	int endY = min(SCREEN_HEIGHT - 1, (int)(maxY + 0.5f));
+
+	for (int j = startY; j <= endY; ++j)
+	{
+		for (int i = startX; i <= endX; ++i)
+		{
+			Vector3 point((float)i, (float)j, 1.0f);
 			if (!pointInTriangle(point, triangle)) continue;
 
 			Vector3 Coords = computeBarycentricCoords(point, triangle);
@@ -255,7 +304,78 @@ void DisplayManager::Rasterization(Triangle& triangle, Shader& shader)
 				Vector3 interpolateNormal = (triangle.va.WorldNormal * Coords.x() * zVal.x() + triangle.vb.WorldNormal * Coords.y() * zVal.y()
 					+ triangle.vc.WorldNormal * Coords.z() * zVal.z()) * depth;
 
-				Vector3 color = shader.FragmentShader(interpolateFragPos, interpolateNormal, interpolateTexCoord);
+				Vector4 interpolateFragPosLightSpace = (triangle.va.FragPosLightSpace * Coords.x() * zVal.x() + triangle.vb.FragPosLightSpace * Coords.y() * zVal.y()
+					+ triangle.vc.FragPosLightSpace * Coords.z() * zVal.z()) * depth;
+
+
+				static int tmp = 1;
+				if (tmp > 0)
+				{
+					tmp--;
+					Vector4 viewPos = triangle.view * Vector4(triangle.va.WorldPos);
+					//std::cout << "viewPos:  " << viewPos.x() << "   " << viewPos.y() << "   " << viewPos.z() << std::endl;
+
+					//std::cout << "worldPos:    " << triangle.va.WorldPos.x() << "   " << triangle.va.WorldPos.y() << "   " << triangle.va.WorldPos.z() << std::endl;
+
+					/*std::cout << triangle.view.m11 << "  " << triangle.view.m12 << "  " << triangle.view.m13 << "  " << triangle.view.m14 << std::endl;
+					std::cout << triangle.view.m21 << "  " << triangle.view.m22 << "  " << triangle.view.m23 << "  " << triangle.view.m24 << std::endl;
+					std::cout << triangle.view.m31 << "  " << triangle.view.m32 << "  " << triangle.view.m33 << "  " << triangle.view.m34 << std::endl;
+					std::cout << triangle.view.m41 << "  " << triangle.view.m42 << "  " << triangle.view.m43 << "  " << triangle.view.m44 << std::endl;
+
+					Matrix4X4 invView = triangle.view.inverse();
+
+					std::cout << "-----------------" << std::endl;
+
+					std::cout << invView.m11 << "  " << invView.m12 << "  " << invView.m13 << "  " << invView.m14 << std::endl;
+					std::cout << invView.m21 << "  " << invView.m22 << "  " << invView.m23 << "  " << invView.m24 << std::endl;
+					std::cout << invView.m31 << "  " << invView.m32 << "  " << invView.m33 << "  " << invView.m34 << std::endl;
+					std::cout << invView.m41 << "  " << invView.m42 << "  " << invView.m43 << "  " << invView.m44 << std::endl;
+
+
+					std::cout << "-----------------" << std::endl;
+
+					std::cout << triangle.projection.m11 << "  " << triangle.projection.m12 << "  " << triangle.projection.m13 << "  " << triangle.projection.m14 << std::endl;
+					std::cout << triangle.projection.m21 << "  " << triangle.projection.m22 << "  " << triangle.projection.m23 << "  " << triangle.projection.m24 << std::endl;
+					std::cout << triangle.projection.m31 << "  " << triangle.projection.m32 << "  " << triangle.projection.m33 << "  " << triangle.projection.m34 << std::endl;
+					std::cout << triangle.projection.m41 << "  " << triangle.projection.m42 << "  " << triangle.projection.m43 << "  " << triangle.projection.m44 << std::endl;
+
+					Matrix4X4 invProjection = triangle.projection.inverse();
+
+					std::cout << "-----------------" << std::endl;
+
+					std::cout << invProjection.m11 << "  " << invProjection.m12 << "  " << invProjection.m13 << "  " << invProjection.m14 << std::endl;
+					std::cout << invProjection.m21 << "  " << invProjection.m22 << "  " << invProjection.m23 << "  " << invProjection.m24 << std::endl;
+					std::cout << invProjection.m31 << "  " << invProjection.m32 << "  " << invProjection.m33 << "  " << invProjection.m34 << std::endl;
+					std::cout << invProjection.m41 << "  " << invProjection.m42 << "  " << invProjection.m43 << "  " << invProjection.m44 << std::endl;
+					
+
+
+
+					Vector4 worldpos = invView * viewPos;*/
+					//std::cout << "worldPos:    " << worldpos.x() << "   " << worldpos.y() << "   " << worldpos.z() << std::endl;
+
+
+					/*Vector4 invScreenPos = triangle.va.Position;
+					invScreenPos._z = invScreenPos.z() * 2.0f - 1.0f;
+					invScreenPos._y = invScreenPos.y() / (SCREEN_HEIGHT - 1) * 2.0f - 1.0f;
+					invScreenPos._x = invScreenPos.x() / (SCREEN_WIDTH - 1) * 2.0f - 1.0f;
+
+					invScreenPos._x *= invScreenPos.w();
+					invScreenPos._y *= invScreenPos.w();
+					invScreenPos._z *= invScreenPos.w();
+
+					Matrix4X4 invView = triangle.view.inverse();
+					Matrix4X4 invProjection = triangle.projection.inverse();
+
+					Vector4 worldpos = invProjection * invScreenPos;
+					std::cout << "worldPos:    " << worldpos.x() << "   " << worldpos.y() << "   " << worldpos.z() << std::endl; */
+
+
+				}
+
+
+				Vector3 color = shader.FragmentShader(interpolateFragPos, interpolateNormal, interpolateTexCoord, interpolateFragPosLightSpace);
+
 				unsigned char r, g, b;
 				convertToRGB(color, r, g, b);
 				writeFrameBuffer(i, j, r, g, b);
@@ -280,7 +400,7 @@ void DisplayManager::Rasterization_ShadowMap(Triangle& triangle)
 	{
 		for (int i = startX; i <= endX; ++i)
 		{
-			Vector3 point((float)i + 0.5f, (float)j + 0.5f, 1.0f);
+			Vector3 point((float)i, (float)j, 1.0f);
 			if (!pointInTriangle(point, triangle)) continue;
 
 			Vector3 Coords = computeBarycentricCoords(point, triangle);
@@ -290,6 +410,48 @@ void DisplayManager::Rasterization_ShadowMap(Triangle& triangle)
 			{
 				writeShadowMap(i, j, depth);
 			}
+		}
+	}
+}
+
+void DisplayManager::Draw_WireFrame(Triangle& triangle)
+{
+	drawLine(triangle.va.Position.x(), triangle.va.Position.y(), triangle.vb.Position.x(), triangle.vb.Position.y());
+	drawLine(triangle.vb.Position.x(), triangle.vb.Position.y(), triangle.vc.Position.x(), triangle.vc.Position.y());
+	drawLine(triangle.vc.Position.x(), triangle.vc.Position.y(), triangle.va.Position.x(), triangle.va.Position.y());
+}
+
+void DisplayManager::drawLine(int x0, int y0, int x1, int y1)
+{
+	bool swaped = false;
+	if (std::abs(x0 - x1) < std::abs(y0 - y1))
+	{
+		std::swap(x0, y0);
+		std::swap(x1, y1);
+		swaped = true;
+	}
+	if (x0 > x1)
+	{
+		std::swap(x0, x1);
+		std::swap(y0, y1);
+	}
+	unsigned char r = 0;
+	unsigned char g = 255;
+	unsigned char b = 0;
+
+	float delta = std::abs((float)(y1 - y0) / (float)(x1 - x0));
+	float tmp = 0;
+	int y = y0;
+	for (int x = x0; x <= x1; ++x)
+	{
+		if (swaped) writeFrameBuffer(y, x, r, g, b);
+		else writeFrameBuffer(x, y, r, g, b);
+
+		tmp += delta;
+		if (tmp > 0.5f)
+		{
+			tmp -= 1.0f;
+			y += (y1 > y0) ? 1 : -1;
 		}
 	}
 }

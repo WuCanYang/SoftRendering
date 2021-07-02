@@ -9,7 +9,10 @@ struct Index3I
 {
 	int index[3];
 
-	Index3I() {}
+	Index3I()
+	{
+		index[0] = index[1] = index[2] = 0;
+	}
 	Index3I(int a, int b, int c)
 	{
 		index[0] = a;

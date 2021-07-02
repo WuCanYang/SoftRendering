@@ -22,8 +22,8 @@ public:
 	
 	Vector3 texture2D(float u, float v)  //Ë«ÏßÐÔ²åÖµ
 	{
-		int x = u * (width - 1);
-		int y = v * (height - 1);
+		int x = (int)(u * (width - 1));
+		int y = (int)(v * (height - 1));
 		int index = (y * width + x) * channel;
 
 		int x1 = x + 1 <= width - 1 ? x + 1 : width - 1;

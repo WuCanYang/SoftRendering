@@ -1,6 +1,6 @@
 #pragma once
 
-#define PI 3.1415926
+#define PI 3.1415926f
 
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 1024

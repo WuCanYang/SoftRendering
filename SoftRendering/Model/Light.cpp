@@ -1,19 +1,26 @@
 #include "Light.h"
-
+#include "Constant.h"
+#include "Model.h"
 
 void Light::update()
 {
-
+	/*static float times = 0.0f;
+	times += 30.0f;
+	float theta = times / 180.0f * PI;
+	Position._x += 1 * sinf(theta);
+	mesh->Position._x += 1 * sinf(theta);*/
 }
 
 Matrix4X4 Light::GetViewMatrix()
 {
 	Vector3 up(0.0f, 1.0f, 0.0f);
-	Vector3 direction = Direction;
+	Vector3 direction = Position - Vector3();
 	direction.Normalize();
 
 	Vector3 right = up.cross(direction);
+	right.Normalize();
 	up = direction.cross(right);
+	up.Normalize();
 
 	Matrix4X4 viewTransform;
 	viewTransform.m11 = right.x();

@@ -9,7 +9,9 @@ Matrix4X4 Camera::GetViewMatrix()
 	direction.Normalize();
 
 	Vector3 right = up.cross(direction);
+	right.Normalize();
 	up = direction.cross(right);
+	up.Normalize();
 
 	Matrix4X4 viewTransform;
 	viewTransform.m11 = right.x();

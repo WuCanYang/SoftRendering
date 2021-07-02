@@ -33,7 +33,7 @@ class DisplayManager  //光栅化阶段
 
 
 	bool pointInTriangle(class Vector3& point, class Triangle& triangle);
-	class Vector3 computeBarycentricCoords(class Vector3& point, class Triangle& triangle);
+	//class Vector3 computeBarycentricCoords(class Vector3& point, class Triangle& triangle);
 	void convertToRGB(Vector3& color, unsigned char& r, unsigned char& g, unsigned char& b);
 
 	float readDepth(int x, int y);
@@ -42,6 +42,8 @@ class DisplayManager  //光栅化阶段
 
 	float readShadowMap(int x, int y);
 	void writeShadowMap(int x, int y, float depth);
+
+	void drawLine(int x0, int y0, int x1, int y1);
 
 public:
 	~DisplayManager();
@@ -54,7 +56,11 @@ public:
 	DepthBuffer* GetShadowMap();
 
 	void Rasterization(class Triangle& triangle, class Shader& shader);
+	void Rasterization_ShadowMapMode(class Triangle& triangle, class ShadowMapShader& shader); //使用ShadowMapShader渲染场景，着色器参数不一样
 	void Rasterization_ShadowMap(class Triangle& triangle);  //获取shadow map
+
+	void Draw_WireFrame(class Triangle& triangle);  //线框模式
+	class Vector3 computeBarycentricCoords(class Vector3& point, class Triangle& triangle);
 
 	void frame();
 

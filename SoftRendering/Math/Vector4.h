@@ -40,15 +40,15 @@ public:
 		return Vector4(_x / a, _y / a, _z / a, _w / a);
 	}
 
-	/*inline Vector4 operator+(const Vector4& a)
+	inline Vector4 operator+(const Vector4& a)
 	{
-		return Vector4(_x + a._x, _y + a._y, _z + a._z);
+		return Vector4(_x + a._x, _y + a._y, _z + a._z, _w + a._w);
 	}
 
 	inline Vector4 operator-(const Vector4& a)
 	{
-		return Vector4(_x - a._x, _y - a._y, _z - a._z);
-	}*/
+		return Vector4(_x - a._x, _y - a._y, _z - a._z, _w - a._w);
+	}
 
 
 

@@ -2,7 +2,7 @@
 #include <math.h>
 #include "Constant.h"
 
-Model::Model() : Position(0.0f, 0.0f, 0.0f), Rotation(0.0f), Scale(1.0f), modelTexture(nullptr)
+Model::Model() : Position(0.0f, 0.0f, -0.5f), Rotation(0.0f), Scale(0.5f), modelTexture(nullptr)
 {
 
 }
@@ -16,6 +16,7 @@ Model::~Model()
 void Model::update()
 {
 	if(modelTexture != nullptr) Rotation._y += 10.0f;
+	//if (modelTexture == nullptr) Position._x += 0.3f;
 }
 
 Matrix4X4 Model::ScaleMatrix()

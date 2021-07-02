@@ -75,6 +75,6 @@ public:
 
 	inline float length()
 	{
-		return sqrtf(pow(_x, 2) + pow(_y, 2) + pow(_z, 2));
+		return sqrtf(powf(_x, 2) + powf(_y, 2) + powf(_z, 2));
 	}
 };

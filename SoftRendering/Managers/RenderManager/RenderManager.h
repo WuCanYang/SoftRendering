@@ -4,6 +4,7 @@
 #include "Model/Light.h"
 #include "Camera/Camera.h"
 #include "Shader/Shader.h"
+#include "Model/Constant.h"
 
 class SceneManager;
 class DisplayManager;
@@ -20,6 +21,7 @@ class RenderManager  //几何阶段
 	void loadSceneResources();
 
 	void Render(class Shader& shader, Model* model);		//提取出来的general模式和shadow模式中公共的部分
+	void Render_ShadowMapMode(class ShadowMapShader& shader, Model* model);		//ShadowMap下渲染场景
 	void GeneralMode();
 
 	void RenderingShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection); //用于阴影模式得到shadowmap
@@ -28,9 +30,15 @@ class RenderManager  //几何阶段
 	void ShadowMode();
 
 
+	void WireframeMode();
+
+
+
+	void testFunc();
+
 public:
 
-	RenderManager() :models(nullptr), light(nullptr), camera(nullptr) {}
+	RenderManager() :sceneManager(nullptr), displayManager(nullptr), models(nullptr), light(nullptr), camera(nullptr) {}
 
 	void setSceneManager(SceneManager* sm);
 	void setDisplayManager(DisplayManager* dm);
