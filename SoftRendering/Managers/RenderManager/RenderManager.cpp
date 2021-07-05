@@ -324,6 +324,28 @@ void RenderManager::testFunc()
 	Matrix4X4 view = camera->GetViewMatrix();
 	Matrix4X4 projection = camera->GetPerspectiveMatrix();
 
+	/*std::cout << m.m11 << "   " << m.m12 << "   " << m.m13 << "   " << m.m14 << std::endl;
+	std::cout << m.m21 << "   " << m.m22 << "   " << m.m23 << "   " << m.m24 << std::endl;
+	std::cout << m.m31 << "   " << m.m32 << "   " << m.m33 << "   " << m.m34 << std::endl;
+	std::cout << m.m41 << "   " << m.m42 << "   " << m.m43 << "   " << m.m44 << std::endl;
+	std::cout << "----------------------" << std::endl;
+	std::cout << view.m11 << "   " << view.m12 << "   " << view.m13 << "   " << view.m14 << std::endl;
+	std::cout << view.m21 << "   " << view.m22 << "   " << view.m23 << "   " << view.m24 << std::endl;
+	std::cout << view.m31 << "   " << view.m32 << "   " << view.m33 << "   " << view.m34 << std::endl;
+	std::cout << view.m41 << "   " << view.m42 << "   " << view.m43 << "   " << view.m44 << std::endl;
+	std::cout << "----------------------" << std::endl;
+	std::cout << projection.m11 << "   " << projection.m12 << "   " << projection.m13 << "   " << projection.m14 << std::endl;
+	std::cout << projection.m21 << "   " << projection.m22 << "   " << projection.m23 << "   " << projection.m24 << std::endl;
+	std::cout << projection.m31 << "   " << projection.m32 << "   " << projection.m33 << "   " << projection.m34 << std::endl;
+	std::cout << projection.m41 << "   " << projection.m42 << "   " << projection.m43 << "   " << projection.m44 << std::endl;
+	
+
+	Matrix4X4 tmp = projection * view * m;
+	std::cout << tmp.m11 << "   " << tmp.m12 << "   " << tmp.m13 << "   " << tmp.m14 << std::endl;
+	std::cout << tmp.m21 << "   " << tmp.m22 << "   " << tmp.m23 << "   " << tmp.m24 << std::endl;
+	std::cout << tmp.m31 << "   " << tmp.m32 << "   " << tmp.m33 << "   " << tmp.m34 << std::endl;
+	std::cout << tmp.m41 << "   " << tmp.m42 << "   " << tmp.m43 << "   " << tmp.m44 << std::endl;*/
+
 	for (int i = 0; i < plane->Vertices.size(); ++i)
 	{
 		Vector4 worldPos = m * Vector4(plane->Vertices[i]);
@@ -334,6 +356,7 @@ void RenderManager::testFunc()
 	}
 
 	Vector4 testPoint = vec[0] * 0.3333333f + vec[1] * 0.3333333f + vec[2] * 0.3333334f; //测试点世界坐标;
+	testPoint = Vector4(-1.0f, -0.65f, 1.0f, 1.0f);
 	std::cout << "testPoint worldPos :  " << testPoint.x() << "   " << testPoint.y() << "   " << testPoint.z() << std::endl;
 
 	Vector4 testClip = projection * view * testPoint;
@@ -342,7 +365,7 @@ void RenderManager::testFunc()
 	testClip._z /= testClip._w;
 	int testx = (testClip._x + 1.0f) * 0.5f * (SCREEN_WIDTH - 1);
 	int testy = (testClip._y + 1.0f) * 0.5f * (SCREEN_HEIGHT - 1);	//测试点屏幕x y ， 用于计算屏幕空间重心坐标
-
+	std::cout << testx << "   " << testy << std::endl;
 
 	for (int i = 0; i < ClipVertices.size(); ++i)
 	{
@@ -359,9 +382,9 @@ void RenderManager::testFunc()
 	}
 
 	Triangle triangle;
-	triangle.va.Position = ClipVertices[0];
-	triangle.vb.Position = ClipVertices[1];
-	triangle.vc.Position = ClipVertices[2];
+	triangle.va.Position = ClipVertices[0];		std::cout << ClipVertices[0].x() << "   " << ClipVertices[0].y() << "   " << ClipVertices[0].z() << std::endl;
+	triangle.vb.Position = ClipVertices[1];		std::cout << ClipVertices[1].x() << "   " << ClipVertices[1].y() << "   " << ClipVertices[1].z() << std::endl;
+	triangle.vc.Position = ClipVertices[2];		std::cout << ClipVertices[2].x() << "   " << ClipVertices[2].y() << "   " << ClipVertices[2].z() << std::endl;
 
 	triangle.va.WorldPos = Vector3(vec[0].x(), vec[0].y(), vec[0].z());
 	triangle.vb.WorldPos = Vector3(vec[1].x(), vec[1].y(), vec[1].z());

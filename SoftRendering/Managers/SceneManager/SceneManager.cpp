@@ -17,6 +17,7 @@ SceneManager::SceneManager(): renderManager(nullptr), camera(nullptr), light(nul
 	{
 		loadPlane();
 	}
+	//loadPlane();
 }
 
 SceneManager::~SceneManager()
@@ -36,7 +37,7 @@ void SceneManager::loadPlane()
 	m->Position = Vector3(0.0f, -0.65f, 0.0f);
 	m->Scale = Vector3(0.5f);
 
-	/*float planeVertices[] = {
+	float planeVertices[] = {
 		// positions            // normals         // texcoords
 		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
 		-5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
@@ -45,9 +46,9 @@ void SceneManager::loadPlane()
 		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
 		 5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,  5.0f, 5.0f,
 		-5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 5.0f
-	};*/
+	};
 
-	float planeVertices[] = {
+	/*float planeVertices[] = {
 		// positions            // normals         // texcoords
 		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
 		-5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
@@ -64,9 +65,9 @@ void SceneManager::loadPlane()
 		 5.0f, 0.0f,  5.0f,  0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
 		 0.0f, 0.0f,  0.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
 		 5.0f, 0.0f, -5.0f,  0.0f, 1.0f, 0.0f,  5.0f, 5.0f,
-	};
+	};*/
 
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		int index = i * 8;
 		m->Vertices.push_back(Vector3(planeVertices[index], planeVertices[index + 1], planeVertices[index + 2]));

@@ -13,6 +13,10 @@ Matrix4X4 Camera::GetViewMatrix()
 	up = direction.cross(right);
 	up.Normalize();
 
+	/*std::cout << direction.x() << "   " << direction.y() << "   " << direction.z() << std::endl;
+	std::cout << right.x() << "   " << right.y() << "   " << right.z() << std::endl;
+	std::cout << up.x() << "   " << up.y() << "   " << up.z() << std::endl;*/
+
 	Matrix4X4 viewTransform;
 	viewTransform.m11 = right.x();
 	viewTransform.m12 = right.y();
