@@ -17,6 +17,7 @@ public:
 
 	Vector3 GetTexturePixel(int index)
 	{
+		//if (index < 0 || index >= width * height) return Vector3(1.0f);
 		return Vector3(data[index], data[index + 1], data[index + 2]);
 	}
 	

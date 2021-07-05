@@ -38,12 +38,12 @@ class DisplayManager  //光栅化阶段
 
 	float readDepth(int x, int y);
 	void writeDepth(int x, int y, float depth);
-	void writeFrameBuffer(int x, int y, unsigned char& r, unsigned char& g, unsigned char& b);
+	//void writeFrameBuffer(int x, int y, unsigned char& r, unsigned char& g, unsigned char& b);
 
 	float readShadowMap(int x, int y);
 	void writeShadowMap(int x, int y, float depth);
 
-	void drawLine(int x0, int y0, int x1, int y1);
+	//void drawLine(int x0, int y0, int x1, int y1);
 
 public:
 	~DisplayManager();
@@ -60,7 +60,10 @@ public:
 	void Rasterization_ShadowMap(class Triangle& triangle);  //获取shadow map
 
 	void Draw_WireFrame(class Triangle& triangle);  //线框模式
+
 	class Vector3 computeBarycentricCoords(class Vector3& point, class Triangle& triangle);
+	void writeFrameBuffer(int x, int y, unsigned char& r, unsigned char& g, unsigned char& b);
+	void drawLine(int x0, int y0, int x1, int y1);
 
 	void frame();
 

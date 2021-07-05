@@ -55,7 +55,6 @@ void RenderManager::Render(Shader& shader, Model* model)
 	{
 		ClipVertices[i]._x = (ClipVertices[i]._x + 1) * 0.5f * (SCREEN_WIDTH - 1);
 		ClipVertices[i]._y = (ClipVertices[i]._y + 1) * 0.5f * (SCREEN_HEIGHT - 1);
-		ClipVertices[i]._z = (ClipVertices[i]._z + 1) * 0.5f;
 	}
 
 	for (int i = 0; i < VerticesIndices.size(); ++i) //设置三角形
@@ -120,7 +119,7 @@ void RenderManager::Render_ShadowMapMode(ShadowMapShader& shader, Model* model)	
 	{
 		ClipVertices[i]._x = (ClipVertices[i]._x + 1) * 0.5f * (SCREEN_WIDTH - 1);
 		ClipVertices[i]._y = (ClipVertices[i]._y + 1) * 0.5f * (SCREEN_HEIGHT - 1);
-		ClipVertices[i]._z = (ClipVertices[i]._z + 1) * 0.5f;
+		//ClipVertices[i]._z = (ClipVertices[i]._z + 1) * 0.5f;
 	}
 
 	for (int i = 0; i < VerticesIndices.size(); ++i) //设置三角形
@@ -198,7 +197,7 @@ void RenderManager::RenderingShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lig
 		{
 			ClipVertices[i]._x = (ClipVertices[i]._x + 1) * 0.5f * (SHADOW_WIDTH - 1);
 			ClipVertices[i]._y = (ClipVertices[i]._y + 1) * 0.5f * (SHADOW_HEIGHT - 1);
-			ClipVertices[i]._z = (ClipVertices[i]._z + 1) * 0.5f;
+			//ClipVertices[i]._z = (ClipVertices[i]._z + 1) * 0.5f;
 		}
 
 		for (int i = 0; i < VerticesIndices.size(); ++i) //设置三角形
@@ -242,14 +241,15 @@ void RenderManager::ShadowMode()
 	loadSceneResources();
 	Matrix4X4 lightSpaceView = light->GetViewMatrix();
 	Matrix4X4 lightSpaceProjection = light->GetOrthoMatrix(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 7.5f);
-	testFunc();
+	
 
 	displayManager->ClearShadowMap();
 	RenderingShadowMap(lightSpaceView, lightSpaceProjection);
 
-	displayManager->ClearBuffer();
+	displayManager->ClearBuffer(); 
 	RenderingScene_ShadowMap(lightSpaceView, lightSpaceProjection);
 	RenderingLight();
+	testFunc();
 	displayManager->SwapBuffer();
 }
 
@@ -324,7 +324,7 @@ void RenderManager::testFunc()
 	Matrix4X4 view = camera->GetViewMatrix();
 	Matrix4X4 projection = camera->GetPerspectiveMatrix();
 
-	/*std::cout << m.m11 << "   " << m.m12 << "   " << m.m13 << "   " << m.m14 << std::endl;
+	std::cout << m.m11 << "   " << m.m12 << "   " << m.m13 << "   " << m.m14 << std::endl;
 	std::cout << m.m21 << "   " << m.m22 << "   " << m.m23 << "   " << m.m24 << std::endl;
 	std::cout << m.m31 << "   " << m.m32 << "   " << m.m33 << "   " << m.m34 << std::endl;
 	std::cout << m.m41 << "   " << m.m42 << "   " << m.m43 << "   " << m.m44 << std::endl;
@@ -344,7 +344,7 @@ void RenderManager::testFunc()
 	std::cout << tmp.m11 << "   " << tmp.m12 << "   " << tmp.m13 << "   " << tmp.m14 << std::endl;
 	std::cout << tmp.m21 << "   " << tmp.m22 << "   " << tmp.m23 << "   " << tmp.m24 << std::endl;
 	std::cout << tmp.m31 << "   " << tmp.m32 << "   " << tmp.m33 << "   " << tmp.m34 << std::endl;
-	std::cout << tmp.m41 << "   " << tmp.m42 << "   " << tmp.m43 << "   " << tmp.m44 << std::endl;*/
+	std::cout << tmp.m41 << "   " << tmp.m42 << "   " << tmp.m43 << "   " << tmp.m44 << std::endl;
 
 	for (int i = 0; i < plane->Vertices.size(); ++i)
 	{
@@ -356,7 +356,7 @@ void RenderManager::testFunc()
 	}
 
 	Vector4 testPoint = vec[0] * 0.3333333f + vec[1] * 0.3333333f + vec[2] * 0.3333334f; //测试点世界坐标;
-	testPoint = Vector4(-1.0f, -0.65f, 1.0f, 1.0f);
+	testPoint = Vector4(-2.5f, -0.65f, 0.0f, 1.0f);
 	std::cout << "testPoint worldPos :  " << testPoint.x() << "   " << testPoint.y() << "   " << testPoint.z() << std::endl;
 
 	Vector4 testClip = projection * view * testPoint;
@@ -365,20 +365,22 @@ void RenderManager::testFunc()
 	testClip._z /= testClip._w;
 	int testx = (testClip._x + 1.0f) * 0.5f * (SCREEN_WIDTH - 1);
 	int testy = (testClip._y + 1.0f) * 0.5f * (SCREEN_HEIGHT - 1);	//测试点屏幕x y ， 用于计算屏幕空间重心坐标
-	std::cout << testx << "   " << testy << std::endl;
+	float testDepth = (testClip._z + 1) * 0.5f;
+
+	std::cout << testx << "   " << testy<<"   "<<testDepth << std::endl;
 
 	for (int i = 0; i < ClipVertices.size(); ++i)
 	{
 		ClipVertices[i]._x /= ClipVertices[i]._w;
 		ClipVertices[i]._y /= ClipVertices[i]._w;
-		ClipVertices[i]._z /= ClipVertices[i]._w;
+		//ClipVertices[i]._z /= ClipVertices[i]._w;
 	}
 
 	for (int i = 0; i < ClipVertices.size(); ++i) //视口变换
 	{
-		ClipVertices[i]._x = (ClipVertices[i]._x + 1) * 0.5f * (SCREEN_WIDTH - 1);
-		ClipVertices[i]._y = (ClipVertices[i]._y + 1) * 0.5f * (SCREEN_HEIGHT - 1);
-		ClipVertices[i]._z = (ClipVertices[i]._z + 1) * 0.5f;
+		ClipVertices[i]._x = (ClipVertices[i]._x + 1.0f) * 0.5f * (SCREEN_WIDTH - 1);
+		ClipVertices[i]._y = (ClipVertices[i]._y + 1.0f) * 0.5f * (SCREEN_HEIGHT - 1);
+		//ClipVertices[i]._z = (ClipVertices[i]._z + 1.0f) * 0.5f;
 	}
 
 	Triangle triangle;
@@ -386,15 +388,18 @@ void RenderManager::testFunc()
 	triangle.vb.Position = ClipVertices[1];		std::cout << ClipVertices[1].x() << "   " << ClipVertices[1].y() << "   " << ClipVertices[1].z() << std::endl;
 	triangle.vc.Position = ClipVertices[2];		std::cout << ClipVertices[2].x() << "   " << ClipVertices[2].y() << "   " << ClipVertices[2].z() << std::endl;
 
-	triangle.va.WorldPos = Vector3(vec[0].x(), vec[0].y(), vec[0].z());
-	triangle.vb.WorldPos = Vector3(vec[1].x(), vec[1].y(), vec[1].z());
-	triangle.vc.WorldPos = Vector3(vec[2].x(), vec[2].y(), vec[2].z());
+	triangle.va.WorldPos = Vector3(vec[0].x(), vec[0].y(), vec[0].z());		std::cout << vec[0].x() << "   " << vec[0].y() << "   " << vec[0].z() << std::endl;
+	triangle.vb.WorldPos = Vector3(vec[1].x(), vec[1].y(), vec[1].z());		std::cout << vec[1].x() << "   " << vec[1].y() << "   " << vec[1].z() << std::endl;
+	triangle.vc.WorldPos = Vector3(vec[2].x(), vec[2].y(), vec[2].z());		std::cout << vec[2].x() << "   " << vec[2].y() << "   " << vec[2].z() << std::endl;
 
+	//displayManager->drawLine(testx, testy, triangle.va.Position.x(), triangle.va.Position.y());
+	//displayManager->drawLine(triangle.va.Position.x(), triangle.va.Position.y(), triangle.vc.Position.x(), triangle.vc.Position.y());
 
 	Vector3 p(testx, testy, 1.0f);
-	Vector3 Coords = displayManager->computeBarycentricCoords(p, triangle);
+	Vector3 Coords = displayManager->computeBarycentricCoords(p, triangle); std::cout << Coords.x() << "   " << Coords.y() << "   " << Coords.z() << std::endl;
 	Vector3 zVal(1.0f / triangle.va.Position.z(), 1.0f / triangle.vb.Position.z(), 1.0f / triangle.vc.Position.z());
 	float depth = 1.0f / (Coords.dot(zVal));
+	std::cout << depth << std::endl;
 
 	Vector3 interpolateFragPos = (triangle.va.WorldPos * Coords.x() * zVal.x() + triangle.vb.WorldPos * Coords.y() * zVal.y()
 		+ triangle.vc.WorldPos * Coords.z() * zVal.z()) * depth;

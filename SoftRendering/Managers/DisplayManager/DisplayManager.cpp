@@ -249,14 +249,17 @@ void DisplayManager::Rasterization(Triangle& triangle, Shader& shader)
 			{
 				writeDepth(i, j, depth);
 
-				Vector2 interpolateTexCoord = (triangle.va.TextureCoordinate * Coords.x() * zVal.x() + triangle.vb.TextureCoordinate * Coords.y() * zVal.y()
-					+ triangle.vc.TextureCoordinate * Coords.z() * zVal.z()) *depth;
+				Vector3 zVal_inter(1.0f / (triangle.va.Position.z() * triangle.va.Position.w()), 1.0f / (triangle.vb.Position.z() * triangle.vb.Position.w()), 1.0f / (triangle.vc.Position.z() * triangle.vc.Position.w()));
+				float depth_inter = 1.0f / (Coords.dot(zVal_inter));
 
-				Vector3 interpolateFragPos = (triangle.va.WorldPos * Coords.x() * zVal.x() + triangle.vb.WorldPos * Coords.y() * zVal.y()
-					+ triangle.vc.WorldPos * Coords.z() * zVal.z()) *depth;
+				Vector2 interpolateTexCoord = (triangle.va.TextureCoordinate * Coords.x() * zVal_inter.x() + triangle.vb.TextureCoordinate * Coords.y() * zVal_inter.y()
+					+ triangle.vc.TextureCoordinate * Coords.z() * zVal_inter.z()) * depth_inter;
 
-				Vector3 interpolateNormal = (triangle.va.WorldNormal * Coords.x() * zVal.x() + triangle.vb.WorldNormal * Coords.y() * zVal.y()
-					+ triangle.vc.WorldNormal * Coords.z() * zVal.z()) * depth;
+				Vector3 interpolateFragPos = (triangle.va.WorldPos * Coords.x() * zVal_inter.x() + triangle.vb.WorldPos * Coords.y() * zVal_inter.y()
+					+ triangle.vc.WorldPos * Coords.z() * zVal_inter.z()) * depth_inter;
+
+				Vector3 interpolateNormal = (triangle.va.WorldNormal * Coords.x() * zVal_inter.x() + triangle.vb.WorldNormal * Coords.y() * zVal_inter.y()
+					+ triangle.vc.WorldNormal * Coords.z() * zVal_inter.z()) * depth_inter;
 
 				Vector3 color = shader.FragmentShader(interpolateFragPos, interpolateNormal, interpolateTexCoord);
 
@@ -295,17 +298,20 @@ void DisplayManager::Rasterization_ShadowMapMode(Triangle& triangle, ShadowMapSh
 			{
 				writeDepth(i, j, depth);
 
-				Vector2 interpolateTexCoord = (triangle.va.TextureCoordinate * Coords.x() * zVal.x() + triangle.vb.TextureCoordinate * Coords.y() * zVal.y()
-					+ triangle.vc.TextureCoordinate * Coords.z() * zVal.z()) * depth;
+				Vector3 zVal_inter(1.0f / (triangle.va.Position.z() * triangle.va.Position.w()), 1.0f / (triangle.vb.Position.z() * triangle.vb.Position.w()), 1.0f / (triangle.vc.Position.z() * triangle.vc.Position.w()));
+				float depth_inter = 1.0f / (Coords.dot(zVal_inter));
 
-				Vector3 interpolateFragPos = (triangle.va.WorldPos * Coords.x() * zVal.x() + triangle.vb.WorldPos * Coords.y() * zVal.y()
-					+ triangle.vc.WorldPos * Coords.z() * zVal.z()) * depth;
+				Vector2 interpolateTexCoord = (triangle.va.TextureCoordinate * Coords.x() * zVal_inter.x() + triangle.vb.TextureCoordinate * Coords.y() * zVal_inter.y()
+					+ triangle.vc.TextureCoordinate * Coords.z() * zVal_inter.z()) * depth_inter;
 
-				Vector3 interpolateNormal = (triangle.va.WorldNormal * Coords.x() * zVal.x() + triangle.vb.WorldNormal * Coords.y() * zVal.y()
-					+ triangle.vc.WorldNormal * Coords.z() * zVal.z()) * depth;
+				Vector3 interpolateFragPos = (triangle.va.WorldPos * Coords.x() * zVal_inter.x() + triangle.vb.WorldPos * Coords.y() * zVal_inter.y()
+					+ triangle.vc.WorldPos * Coords.z() * zVal_inter.z()) * depth_inter;
 
-				Vector4 interpolateFragPosLightSpace = (triangle.va.FragPosLightSpace * Coords.x() * zVal.x() + triangle.vb.FragPosLightSpace * Coords.y() * zVal.y()
-					+ triangle.vc.FragPosLightSpace * Coords.z() * zVal.z()) * depth;
+				Vector3 interpolateNormal = (triangle.va.WorldNormal * Coords.x() * zVal_inter.x() + triangle.vb.WorldNormal * Coords.y() * zVal_inter.y()
+					+ triangle.vc.WorldNormal * Coords.z() * zVal_inter.z()) * depth_inter;
+
+				Vector4 interpolateFragPosLightSpace = (triangle.va.FragPosLightSpace * Coords.x() * zVal_inter.x() + triangle.vb.FragPosLightSpace * Coords.y() * zVal_inter.y()
+					+ triangle.vc.FragPosLightSpace * Coords.z() * zVal_inter.z()) * depth_inter;
 
 				Vector3 color = shader.FragmentShader(interpolateFragPos, interpolateNormal, interpolateTexCoord, interpolateFragPosLightSpace);
 

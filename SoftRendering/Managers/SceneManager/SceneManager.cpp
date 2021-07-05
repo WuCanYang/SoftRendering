@@ -34,7 +34,7 @@ void SceneManager::loadPlane()
 {
 	Model* m = new Model;
 	//m->Position = Vector3(0.0f, -1.3f, 0.0f);
-	m->Position = Vector3(0.0f, -0.65f, 0.0f);
+	m->Position = Vector3(0.0f, -0.4f, 0.0f);
 	m->Scale = Vector3(0.5f);
 
 	float planeVertices[] = {
@@ -194,9 +194,11 @@ void SceneManager::loadLight()
 void SceneManager::loadCamera()
 {
 	camera = new Camera;
-	camera->Position = Vector3(0.0f, 5.0f, 3.0f);
+	camera->Position = Vector3(0.0f, 6.0f, 3.0f);
+	//camera->Position = Vector3(0.0f, 0.0f, 0.0f);
 	if (!models.empty())
 	{
+		//camera->Target = Vector3(0.0f, 0.0f, -1.0f);//Vector3(0.0f); //models[0]->Position;
 		camera->Target = Vector3(0.0f); //models[0]->Position;
 	}
 }

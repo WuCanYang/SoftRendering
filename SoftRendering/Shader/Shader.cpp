@@ -101,8 +101,10 @@ float ShadowMapShader::CalculateShadow(Vector4& FragPosLightSpace)
 	y = ShadowMap->height - 1 - y;
 
 	int index = y * ShadowMap->width + x;
+	//if (index < 0 || index >= ShadowMap->width * ShadowMap->height) return 0.0f;
+
 	float depth = ShadowMap->data[index];
-	float curDepth = (FragPosLightSpace._z + 1.0f) * 0.5f;
+	float curDepth = FragPosLightSpace._z;//(FragPosLightSpace._z + 1.0f) * 0.5f;
 
 	float shadow = curDepth - 0.01f > depth ? 1.0f : 0.0f;
 	return shadow;
