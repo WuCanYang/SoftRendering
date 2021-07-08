@@ -13,3 +13,4 @@
 #define GENERAL false		//模式三选一
 #define SHADOW true
 #define WIREFRAME false
+#define QUATERNION false

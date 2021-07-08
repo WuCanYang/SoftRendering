@@ -97,14 +97,11 @@ float ShadowMapShader::CalculateShadow(Vector4& FragPosLightSpace)
 
 	int x = (FragPosLightSpace._x + 1) * 0.5f * (ShadowMap->width - 1);
 	int y = (FragPosLightSpace._y + 1) * 0.5f * (ShadowMap->height - 1);
-
 	y = ShadowMap->height - 1 - y;
 
 	int index = y * ShadowMap->width + x;
-	//if (index < 0 || index >= ShadowMap->width * ShadowMap->height) return 0.0f;
-
 	float depth = ShadowMap->data[index];
-	float curDepth = FragPosLightSpace._z;//(FragPosLightSpace._z + 1.0f) * 0.5f;
+	float curDepth = FragPosLightSpace._z;
 
 	float shadow = curDepth - 0.01f > depth ? 1.0f : 0.0f;
 	return shadow;
@@ -131,4 +128,31 @@ Vector3 ShadowMapShader::FragmentShader(Vector3& FragPos, Vector3& Normal, Vecto
 
 	Vector3 lighting = ambient + (diffuse + specular) * (1.0f - shadow);
 	return Vector3(Color.x() * lighting.x(), Color.y() * lighting.y(), Color.z() * lighting.z());
+}
+
+//-----------------------------------------------------
+
+
+void QuaternionShader::VertexShader(Matrix4X4& scale, Quaternion& q, Matrix4X4& translate, Matrix4X4& view, Matrix4X4& projection, 
+	std::vector<Vector3>& Vertices, std::vector<Vector3>& Normals, 
+	std::vector<Vector3>& WorldVertices, std::vector<Vector3>& WorldNormals, std::vector<Vector4>& ClipVertices)
+{
+	for (int i = 0; i < Vertices.size(); ++i)
+	{
+		Vector4 afterScale = scale * Vector4(Vertices[i]);
+		Quaternion pureQua(0.0f, afterScale.x(), afterScale.y(), afterScale.z());
+		Quaternion afterQua = q * pureQua * q.inverse();
+		Vector4 worldPos = translate * Vector4(afterQua.x, afterQua.y, afterQua.z, 1.0f);
+
+		Matrix4X4 model = translate * q.toMatrix() * scale;
+
+		Matrix3X3 normalMatrix = Matrix3X3(model).inverse().transpose();
+		Vector3 worldNormal = normalMatrix * Normals[i];
+
+		Vector4 ClipVert = projection * view * worldPos;
+
+		WorldVertices.push_back(Vector3(worldPos.x(), worldPos.y(), worldPos.z()));
+		WorldNormals.push_back(worldNormal);
+		ClipVertices.push_back(ClipVert);
+	}
 }

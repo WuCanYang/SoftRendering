@@ -2,6 +2,7 @@
 #include "Math/Matrix4X4.h"
 #include "Math/Vector3.h"
 #include "Math/Vector2.h"
+#include "Math/Quaternion.h"
 #include <vector>
 
 class Shader
@@ -49,4 +50,13 @@ public:
 	{
 		return Vector3(1.0f);
 	}
+};
+
+class QuaternionShader : public Shader
+{
+public:
+
+	void VertexShader(Matrix4X4& scale, Quaternion& q, Matrix4X4& translate, Matrix4X4& view, Matrix4X4& projection,
+		std::vector<Vector3>& Vertices, std::vector<Vector3>& Normals,
+		std::vector<Vector3>& WorldVertices, std::vector<Vector3>& WorldNormals, std::vector<Vector4>& ClipVertices);  //后面三个用作顶点着色器输出
 };

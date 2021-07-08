@@ -15,7 +15,15 @@ Model::~Model()
 
 void Model::update()
 {
-	if(modelTexture != nullptr) Rotation._y += 10.0f;
+	static float theta = 0.0f;
+	theta += 10.0f;
+	if (modelTexture != nullptr)
+	{
+
+		Rotation_Quaternion.RotateY(theta / 180.0f * PI);
+	}
+
+	//if(modelTexture != nullptr) Rotation._y += 10.0f;
 	//if (modelTexture == nullptr) Position._x += 0.3f;
 }
 

@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "Math/Matrix4X4.h"
 #include <vector>
+#include "Math/Quaternion.h"
 
 struct Index3I
 {
@@ -25,14 +26,13 @@ class Model
 {
 private:
 
-	Matrix4X4 ScaleMatrix();
-	Matrix4X4 RotateMatrix();
-	Matrix4X4 TranslateMatrix();
+
 
 public:
 	Vector3 Position;
 	Vector3 Rotation;
 	Vector3 Scale;
+	Quaternion Rotation_Quaternion;
 
 	Texture* modelTexture;
 
@@ -52,5 +52,8 @@ public:
 
 	void update(); //对模型做一些移动 旋转等
 
+	Matrix4X4 ScaleMatrix();
+	Matrix4X4 RotateMatrix();
+	Matrix4X4 TranslateMatrix();
 	Matrix4X4 GetModelMatrix();
 };

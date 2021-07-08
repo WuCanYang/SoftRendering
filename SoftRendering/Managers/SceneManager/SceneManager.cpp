@@ -119,7 +119,7 @@ void SceneManager::loadLight()
 {
 	light = new Light;
 	//light->Position = Vector3(1.0f, 3.0f, -1.0f);
-	light->Position = Vector3(-1.0f, 3.0f, -2.0f);
+	light->Position = Vector3(-1.0f, 2.0f, -2.0f);
 	if (!models.empty())
 	{
 		light->Direction = light->Position - Vector3();//models[0]->Position;
@@ -195,7 +195,6 @@ void SceneManager::loadCamera()
 {
 	camera = new Camera;
 	camera->Position = Vector3(0.0f, 6.0f, 3.0f);
-	//camera->Position = Vector3(0.0f, 0.0f, 0.0f);
 	if (!models.empty())
 	{
 		//camera->Target = Vector3(0.0f, 0.0f, -1.0f);//Vector3(0.0f); //models[0]->Position;

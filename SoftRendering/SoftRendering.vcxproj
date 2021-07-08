@@ -159,6 +159,7 @@
     <ClInclude Include="Managers\SceneManager\SceneManager.h" />
     <ClInclude Include="Math\Matrix3X3.h" />
     <ClInclude Include="Math\Matrix4X4.h" />
+    <ClInclude Include="Math\Quaternion.h" />
     <ClInclude Include="Math\Vector2.h" />
     <ClInclude Include="Math\Vector3.h" />
     <ClInclude Include="Math\Vector4.h" />
