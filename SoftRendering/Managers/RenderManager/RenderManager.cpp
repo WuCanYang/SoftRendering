@@ -84,7 +84,7 @@ void RenderManager::Render(Shader& shader, Model* model)
 	}
 }
 
-void RenderManager::Render_useQuaternion(QuaternionShader& shader, Model* model)
+void RenderManager::Render_useQuaternion(Shader& shader, Model* model)
 {
 	Matrix4X4 view = camera->GetViewMatrix();
 	Matrix4X4 projection = camera->GetPerspectiveMatrix();
@@ -240,7 +240,7 @@ void RenderManager::GeneralMode()
 void RenderManager::QuaternionMode()
 {
 	loadSceneResources();
-	QuaternionShader shader;
+	Shader shader;
 	shader.light = light;
 	shader.camera = camera;
 

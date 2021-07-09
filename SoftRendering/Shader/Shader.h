@@ -18,6 +18,10 @@ public:
 		std::vector<Vector3>& Vertices, std::vector<Vector3>& Normals, 
 		std::vector<Vector3>& WorldVertices, std::vector<Vector3>& WorldNormals, std::vector<Vector4>& ClipVertices);  //后面三个用作顶点着色器输出
 
+	virtual void VertexShader(Matrix4X4& scale, Quaternion& q, Matrix4X4& translate, Matrix4X4& view, Matrix4X4& projection,
+		std::vector<Vector3>& Vertices, std::vector<Vector3>& Normals,
+		std::vector<Vector3>& WorldVertices, std::vector<Vector3>& WorldNormals, std::vector<Vector4>& ClipVertices);  //后面三个用作顶点着色器输出
+
 	virtual Vector3 FragmentShader(Vector3& FragPos, Vector3& Normal, Vector2& TexCoord);
 };
 
@@ -50,13 +54,4 @@ public:
 	{
 		return Vector3(1.0f);
 	}
-};
-
-class QuaternionShader : public Shader
-{
-public:
-
-	void VertexShader(Matrix4X4& scale, Quaternion& q, Matrix4X4& translate, Matrix4X4& view, Matrix4X4& projection,
-		std::vector<Vector3>& Vertices, std::vector<Vector3>& Normals,
-		std::vector<Vector3>& WorldVertices, std::vector<Vector3>& WorldNormals, std::vector<Vector4>& ClipVertices);  //后面三个用作顶点着色器输出
 };

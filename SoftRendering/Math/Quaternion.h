@@ -2,6 +2,7 @@
 #include <math.h>
 #include "Vector3.h"
 #include "Matrix4X4.h"
+#include "Model/Constant.h"
 
 class Quaternion
 {
@@ -17,7 +18,7 @@ public:
 		x = y = z = 0.0f;
 	}
 
-	inline float dot(const Quaternion& a)
+	inline float dot(const Quaternion& a) const
 	{
 		return w * a.w + x * a.x + y * a.y + z * a.z;
 	}
@@ -111,6 +112,58 @@ public:
 
 		m.m44 = 1.0f;
 		return m;
+	}
+
+	static Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t)
+	{
+		if (t <= 0.0f) return q0;
+		if (t >= 1.0f) return q1;
+
+		float cosOmega = q0.dot(q1);
+
+		float q1w = q1.w;
+		float q1x = q1.x;
+		float q1y = q1.y;
+		float q1z = q1.z;
+		if (cosOmega < 0.0f)
+		{
+			q1w = -q1w;
+			q1x = -q1x;
+			q1y = -q1y;
+			q1z = -q1z;
+			cosOmega = -cosOmega;
+		}
+
+		float k0, k1;
+		if (cosOmega > 0.9999f)
+		{
+			k0 = 1.0f - t;
+			k1 = t;
+		}
+		else
+		{
+			float sinOmega = sqrtf(1.0f - cosOmega * cosOmega);
+			float Omega = atan2(sinOmega, cosOmega);
+			float invSinOmega = 1.0f / sinOmega;
+
+			k0 = sinf((1.0f - t) * Omega) * invSinOmega;
+			k1 = sinf(t * Omega) * invSinOmega;
+		}
+
+		Quaternion result;
+		result.w = k0 * q0.w + k1 * q1w;
+		result.x = k0 * q0.x + k1 * q1x;
+		result.y = k0 * q0.y + k1 * q1y;
+		result.z = k0 * q0.z + k1 * q1z;
+		return result;
+	}
+
+	Vector3 toEulerAngle()
+	{
+		float a = atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+		float b = asin(2 * (w * y - z * x));
+		float c = atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+		return Vector3(a / PI * 180.0f, b / PI * 180.0f, c / PI * 180.0f);
 	}
 
 };

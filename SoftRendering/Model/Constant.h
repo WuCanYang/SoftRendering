@@ -10,7 +10,10 @@
 #define SHADOW_HEIGHT 1024
 
 
-#define GENERAL false		//模式三选一
-#define SHADOW true
+#define GENERAL true		//模式三选一
+#define SHADOW false
 #define WIREFRAME false
+
+
+
 #define QUATERNION false

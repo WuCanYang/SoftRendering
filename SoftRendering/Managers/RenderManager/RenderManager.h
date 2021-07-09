@@ -24,7 +24,7 @@ class RenderManager  //几何阶段
 	void Render_ShadowMapMode(class ShadowMapShader& shader, Model* model);		//ShadowMap下渲染场景
 	void GeneralMode();
 
-	void Render_useQuaternion(class QuaternionShader& shader, Model* model);
+	void Render_useQuaternion(class Shader& shader, Model* model);		//有点绕的使用四元数旋转
 	void QuaternionMode();
 
 	void RenderingShadowMap(Matrix4X4& lightSpaceView, Matrix4X4& lightSpaceProjection); //用于阴影模式得到shadowmap

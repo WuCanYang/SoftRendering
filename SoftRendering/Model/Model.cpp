@@ -15,13 +15,31 @@ Model::~Model()
 
 void Model::update()
 {
-	static float theta = 0.0f;
+	static Quaternion q0;
+	static Quaternion q1;
+	static Vector3 axis(1, 1, 1);
+	q1.RotateAxis(axis, PI);
+
+	static float t = 0.0f;
+	t += 1.0f;
+	if (modelTexture != nullptr)
+	{
+		if (t > 40.0f) t -= 40.0f;
+		
+		Quaternion cur = Quaternion::slerp(q0, q1, t / 40.0f);
+		Rotation = cur.toEulerAngle();
+	}
+	std::cout << Rotation.x() << "   " << Rotation.y() << "   " << Rotation.z() << std::endl;
+
+	/*static float theta = 0.0f;
 	theta += 10.0f;
 	if (modelTexture != nullptr)
 	{
 
 		Rotation_Quaternion.RotateY(theta / 180.0f * PI);
-	}
+
+		Rotation = Rotation_Quaternion.toEulerAngle();
+	}*/
 
 	//if(modelTexture != nullptr) Rotation._y += 10.0f;
 	//if (modelTexture == nullptr) Position._x += 0.3f;
