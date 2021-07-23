@@ -96,7 +96,7 @@ Vector3 ShadowMapShader::FragmentShader(Vector3& FragPos, Vector3& Normal, Vecto
 	Vector3 Color = texture == nullptr ? Vector3(1.0f) : texture->texture2D(TexCoord.x(), TexCoord.y());
 	Normal.Normalize();
 
-	Vector3 ambient = light->Color * 0.2f;
+	Vector3 ambient = light->Color * 0.3f;
 
 	Vector3 lightDir = light->Position - FragPos;
 	lightDir.Normalize();

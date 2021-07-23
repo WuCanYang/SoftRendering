@@ -3,7 +3,8 @@
 #include "Model/Model.h"
 #include "Model/Light.h"
 #include "Model/OBJ_Loader.h"
-#include <Model/Constant.h>
+#include "Model/Constant.h"
+#include "MeshSimplifier/SkinnedMesh.h"
 
 SceneManager::SceneManager(): renderManager(nullptr), camera(nullptr), light(nullptr)
 {
@@ -35,7 +36,7 @@ void SceneManager::loadPlane()
 	Model* m = new Model;
 	//m->Position = Vector3(0.0f, -1.3f, 0.0f);
 	m->Position = Vector3(0.0f, -0.4f, 0.0f);
-	m->Scale = Vector3(0.5f);
+	m->Scale = Vector3(0.3f);
 
 	float planeVertices[] = {
 		// positions            // normals         // texcoords
@@ -82,36 +83,20 @@ void SceneManager::loadPlane()
 		}
 	}
 	models.push_back(m);
-
-	/*m->Vertices.push_back(Vector3(1.0f, 0.0f, -1.0f));
-	m->Vertices.push_back(Vector3(-1.0f, 0.0f, -1.0f));
-	m->Vertices.push_back(Vector3(1.0f, 0.0f, 1.0f));
-	m->Vertices.push_back(Vector3(-1.0f, 0.0f, 1.0f));
-
-	m->TexCoords.push_back(Vector2(-1.0f, -1.0f));
-	m->TexCoords.push_back(Vector2(1.0f, -1.0f));
-	m->TexCoords.push_back(Vector2(1.0f, 1.0f));
-	m->TexCoords.push_back(Vector2(-1.0f, 1.0f));
-
-	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
-	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
-	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
-	m->Normals.push_back(Vector3(0.0f, 1.0f, 0.0f));
-
-	m->VerticesIndices.push_back(Index3I(0, 1, 2));
-	m->VerticesIndices.push_back(Index3I(1, 2, 3));
-
-	m->TexCoordsIndices.push_back(Index3I(0, 1, 2));
-	m->TexCoordsIndices.push_back(Index3I(1, 2, 3));
-
-	m->NormalsIndices.push_back(Index3I(0, 1, 2));
-	m->NormalsIndices.push_back(Index3I(1, 2, 3));*/
 }
 
 void SceneManager::loadModel(std::string name)
 {
 	Model* m = Loader::LoadFile(name);
 	if (!m) return;
+
+	if (EnableMeshSimplify)
+	{
+		SkinnedMesh Mesh;
+		ConvertToSkinnedMesh(m, Mesh);
+		ConvertToModelMesh(Mesh, m);
+	}
+
 	models.push_back(m);
 }
 
@@ -194,7 +179,7 @@ void SceneManager::loadLight()
 void SceneManager::loadCamera()
 {
 	camera = new Camera;
-	camera->Position = Vector3(0.0f, 6.0f, 3.0f);
+	camera->Position = Vector3(0.0f, 4.0f, 2.0f);
 	if (!models.empty())
 	{
 		//camera->Target = Vector3(0.0f, 0.0f, -1.0f);//Vector3(0.0f); //models[0]->Position;
@@ -229,4 +214,94 @@ Light* SceneManager::GetLight()
 Camera* SceneManager::GetCamera()
 {
 	return camera;
+}
+
+void SceneManager::ConvertToSkinnedMesh(Model* m, SkinnedMesh& outMesh)
+{
+	int NumTris = m->VerticesIndices.size();
+	int NumVerts = m->Vertices.size();
+
+	outMesh.Resize(NumTris, NumVerts);
+	outMesh.SetTexCoordCount(1);
+
+	unsigned int* outIndexBuffer = outMesh.IndexBuffer;
+	MeshVertType* outVertexBuffer = outMesh.VertexBuffer;
+
+
+	std::vector<Vector3>& Vertices = m->Vertices;
+	std::vector<Vector2>& TexCoords = m->TexCoords;
+	std::vector<Vector3>& Normals = m->Normals;
+	for (int i = 0; i < NumTris; ++i)
+	{
+		Index3I& VertexIndex = m->VerticesIndices[i];
+		Index3I& TexCoordIndex = m->TexCoordsIndices[i];
+		Index3I& NormalIndex = m->NormalsIndices[i];
+
+		for (int j = 0; j < 3; ++j)
+		{
+			int index = VertexIndex.index[j];
+			
+			outVertexBuffer[index].Position = Vertices[index];
+			outVertexBuffer[index].MasterVertIndex = index;
+			outVertexBuffer[index].MaterialIndex = 0;
+
+			auto& BasicAttr = outVertexBuffer[index].BasicAttributes;
+			BasicAttr.Normal = Normals[NormalIndex.index[j]];
+			BasicAttr.TexCoords[0] = TexCoords[TexCoordIndex.index[j]];
+
+
+			outIndexBuffer[3 * i + j] = index;
+		}
+	}
+	outMesh.Compact();
+}
+
+void SceneManager::ConvertToModelMesh(SkinnedMesh& inMesh, Model* m)
+{
+	unsigned int* inIndexBuffer = inMesh.IndexBuffer;
+	MeshVertType* inVertexBuffer = inMesh.VertexBuffer;
+
+	std::vector<Vector3>& Vertices = m->Vertices;
+	std::vector<Vector2>& TexCoords = m->TexCoords;
+	std::vector<Vector3>& Normals = m->Normals;
+
+	std::vector<Index3I>& VerticesIndices = m->VerticesIndices; 
+	std::vector<Index3I>& TexCoordsIndices = m->TexCoordsIndices;
+	std::vector<Index3I>& NormalsIndices = m->NormalsIndices;
+
+	Vertices.clear();
+	TexCoords.clear();
+	Normals.clear();
+	VerticesIndices.clear();
+	TexCoordsIndices.clear();
+	NormalsIndices.clear();
+
+	int TrisNum = inMesh.NumTris();
+	int VertsNum = inMesh.NumVertices();
+	Vertices.resize(VertsNum);
+	TexCoords.resize(VertsNum);
+	Normals.resize(VertsNum);
+
+	VerticesIndices.resize(TrisNum);
+	TexCoordsIndices.resize(TrisNum);
+	NormalsIndices.resize(TrisNum);
+
+	for (int i = 0; i < TrisNum; ++i)
+	{
+		for (int j = 0; j < 3; ++j)
+		{
+			int index = inIndexBuffer[3 * i + j];
+			Vertices[index] = inVertexBuffer[index].Position;
+
+			auto& BasicAttr = inVertexBuffer[index].BasicAttributes;
+			Normals[index] = BasicAttr.Normal;
+			TexCoords[index] = BasicAttr.TexCoords[0];
+
+			VerticesIndices[i].index[j] = index;
+			TexCoordsIndices[i].index[j] = index;
+			NormalsIndices[i].index[j] = index;
+		}
+	}
+	std::cout << "After simplify, the tris Num:   " << TrisNum << std::endl;
+	std::cout << "After simplify, the vert Num:   " << VertsNum << std::endl;
 }

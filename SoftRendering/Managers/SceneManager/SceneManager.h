@@ -17,6 +17,11 @@ class SceneManager  //应用程序阶段
 
 private:
 
+	void ConvertToSkinnedMesh(Model* m, class SkinnedMesh& outMesh);	//将模型的数据转换为能够进行 减面的数据结构
+	void ConvertToModelMesh(class SkinnedMesh& inMesh, Model* m);		//将减面后的数据重新转化为	原模型数据格式
+
+
+
 	void loadModel(std::string path);
 	void loadLight();
 	void loadCamera();

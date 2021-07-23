@@ -17,12 +17,12 @@ public:
 
 	inline void Zero() { _x = 0; _y = 0; _z = 0; }
 
-	inline Vector3 operator+(const Vector3& a)
+	inline Vector3 operator+(const Vector3& a) const
 	{
 		return Vector3(_x + a._x, _y + a._y, _z + a._z);
 	}
 
-	inline Vector3 operator-(const Vector3& a)
+	inline Vector3 operator-(const Vector3& a) const
 	{
 		return Vector3(_x - a._x, _y - a._y, _z - a._z);
 	}
@@ -41,6 +41,14 @@ public:
 		return Vector3(_x / a, _y / a, _z / a);
 	}
 
+	inline Vector3 operator-=(const Vector3& a)
+	{
+		_x -= a._x;
+		_y -= a._y;
+		_z -= a._z;
+		return *this;
+	}
+
 	inline bool operator==(const Vector3& a) const
 	{
 		return _x == a._x && _y == a._y && _z == a._z;
@@ -51,12 +59,12 @@ public:
 		return _x != a._x || _y != a._y || _z != a._z;
 	}
 
-	inline float dot(const Vector3& a)
+	inline float dot(const Vector3& a) const
 	{
 		return _x * a._x + _y * a._y + _z * a._z;
 	}
 
-	inline Vector3 cross(const Vector3& a)
+	inline Vector3 cross(const Vector3& a) const
 	{
 		float val1 = _y * a._z - a._y * _z;
 		float val2 = _z * a._x - a._z * _x;
@@ -78,3 +86,8 @@ public:
 		return sqrtf(powf(_x, 2) + powf(_y, 2) + powf(_z, 2));
 	}
 };
+
+inline Vector3 operator*(const float& a, const Vector3& b)
+{
+	return Vector3(b._x * a, b._y * a, b._z * a);
+}

@@ -2,7 +2,7 @@
 #include <math.h>
 #include "Constant.h"
 
-Model::Model() : Position(0.0f, 0.0f, -0.5f), Rotation(0.0f), Scale(0.5f), modelTexture(nullptr)
+Model::Model() : Position(0.0f, 0.0f, -0.4f), Rotation(0.0f), Scale(0.5f), modelTexture(nullptr)
 {
 
 }
@@ -15,7 +15,7 @@ Model::~Model()
 
 void Model::update()
 {
-	static Quaternion q0;
+	/*static Quaternion q0;
 	static Quaternion q1;
 	static Vector3 axis(1, 1, 1);
 	q1.RotateAxis(axis, PI);
@@ -29,17 +29,24 @@ void Model::update()
 		Quaternion cur = Quaternion::slerp(q0, q1, t / 40.0f);
 		Rotation = cur.toEulerAngle();
 	}
-	std::cout << Rotation.x() << "   " << Rotation.y() << "   " << Rotation.z() << std::endl;
+	std::cout << Rotation.x() << "   " << Rotation.y() << "   " << Rotation.z() << std::endl;*/
 
-	/*static float theta = 0.0f;
-	theta += 10.0f;
+	static int t = 5;
+	if (t > 0)
+	{
+		--t;
+		return;
+	}
+
+	static float theta = 0.0f;
+	theta += 5.0f;
 	if (modelTexture != nullptr)
 	{
 
 		Rotation_Quaternion.RotateY(theta / 180.0f * PI);
 
 		Rotation = Rotation_Quaternion.toEulerAngle();
-	}*/
+	}
 
 	//if(modelTexture != nullptr) Rotation._y += 10.0f;
 	//if (modelTexture == nullptr) Position._x += 0.3f;

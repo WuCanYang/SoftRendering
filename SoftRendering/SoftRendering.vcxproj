@@ -145,6 +145,8 @@
     <ClCompile Include="Managers\DisplayManager\DisplayManager.cpp" />
     <ClCompile Include="Managers\RenderManager\RenderManager.cpp" />
     <ClCompile Include="Managers\SceneManager\SceneManager.cpp" />
+    <ClCompile Include="MeshSimplifier\MeshManager.cpp" />
+    <ClCompile Include="MeshSimplifier\Simplifier.cpp" />
     <ClCompile Include="Model\Light.cpp" />
     <ClCompile Include="Model\Model.cpp" />
     <ClCompile Include="Model\Triangle.cpp" />
@@ -163,6 +165,15 @@
     <ClInclude Include="Math\Vector2.h" />
     <ClInclude Include="Math\Vector3.h" />
     <ClInclude Include="Math\Vector4.h" />
+    <ClInclude Include="MeshSimplifier\MeshManager.h" />
+    <ClInclude Include="MeshSimplifier\MeshSimplifyElements.h" />
+    <ClInclude Include="MeshSimplifier\Simplifier.h" />
+    <ClInclude Include="MeshSimplifier\SimplifierDataStructure.h" />
+    <ClInclude Include="MeshSimplifier\SimplifierMacros.h" />
+    <ClInclude Include="MeshSimplifier\SimplifierQuadrics.h" />
+    <ClInclude Include="MeshSimplifier\SimplifierQuadricsCache.h" />
+    <ClInclude Include="MeshSimplifier\SimplifierVertex.h" />
+    <ClInclude Include="MeshSimplifier\SkinnedMesh.h" />
     <ClInclude Include="Model\Constant.h" />
     <ClInclude Include="Model\Light.h" />
     <ClInclude Include="Model\Model.h" />

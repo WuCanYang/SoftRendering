@@ -45,6 +45,12 @@
     <ClCompile Include="Shader\Shader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MeshSimplifier\MeshManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshSimplifier\Simplifier.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SoftRender.h">
@@ -105,6 +111,33 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Math\Quaternion.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\MeshSimplifyElements.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\MeshManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\SimplifierVertex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\SimplifierQuadrics.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\SimplifierQuadricsCache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\Simplifier.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\SkinnedMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\SimplifierDataStructure.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\SimplifierMacros.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

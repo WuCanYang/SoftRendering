@@ -64,3 +64,8 @@ public:
 		return sqrtf(powf(_x, 2) + powf(_y, 2));
 	}
 };
+
+inline Vector2 operator*(const float& a, const Vector2& b)
+{
+	return Vector2(b._x * a, b._y * a);
+}

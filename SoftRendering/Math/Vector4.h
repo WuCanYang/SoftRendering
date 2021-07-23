@@ -53,3 +53,8 @@ public:
 
 
 };
+
+inline Vector4 operator*(const float& a, const Vector4& b)
+{
+	return Vector4(b._x * a, b._y * a, b._z * a, b._w * a);
+}
