@@ -51,6 +51,12 @@
     <ClCompile Include="MeshSimplifier\Simplifier.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MeshSimplifier\MeshSimplifyElements.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshSimplifier\Hash.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SoftRender.h">
@@ -138,6 +144,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="MeshSimplifier\SimplifierMacros.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSimplifier\Hash.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

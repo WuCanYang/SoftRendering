@@ -94,6 +94,8 @@ void SceneManager::loadModel(std::string name)
 	{
 		SkinnedMesh Mesh;
 		ConvertToSkinnedMesh(m, Mesh);
+
+
 		ConvertToModelMesh(Mesh, m);
 	}
 

@@ -89,6 +89,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)SoftRendering;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -145,7 +146,9 @@
     <ClCompile Include="Managers\DisplayManager\DisplayManager.cpp" />
     <ClCompile Include="Managers\RenderManager\RenderManager.cpp" />
     <ClCompile Include="Managers\SceneManager\SceneManager.cpp" />
+    <ClCompile Include="MeshSimplifier\Hash.cpp" />
     <ClCompile Include="MeshSimplifier\MeshManager.cpp" />
+    <ClCompile Include="MeshSimplifier\MeshSimplifyElements.cpp" />
     <ClCompile Include="MeshSimplifier\Simplifier.cpp" />
     <ClCompile Include="Model\Light.cpp" />
     <ClCompile Include="Model\Model.cpp" />
@@ -165,6 +168,7 @@
     <ClInclude Include="Math\Vector2.h" />
     <ClInclude Include="Math\Vector3.h" />
     <ClInclude Include="Math\Vector4.h" />
+    <ClInclude Include="MeshSimplifier\Hash.h" />
     <ClInclude Include="MeshSimplifier\MeshManager.h" />
     <ClInclude Include="MeshSimplifier\MeshSimplifyElements.h" />
     <ClInclude Include="MeshSimplifier\Simplifier.h" />

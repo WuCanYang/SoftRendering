@@ -232,6 +232,8 @@ public:
 	BoneContainer& GetBoneContainer() { return SparseBone; }
 	const BoneContainer& GetBoneContainer() const { return SparseBone; }
 
+	static int NumBaseAttributes() { return BasicAttrContainerType::Size(); }
+
 	void Correct()
 	{
 		BasicAttributes.Correct();

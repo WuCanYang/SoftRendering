@@ -31,7 +31,7 @@ void Model::update()
 	}
 	std::cout << Rotation.x() << "   " << Rotation.y() << "   " << Rotation.z() << std::endl;*/
 
-	static int t = 5;
+	/*static int t = 5;
 	if (t > 0)
 	{
 		--t;
@@ -46,7 +46,7 @@ void Model::update()
 		Rotation_Quaternion.RotateY(theta / 180.0f * PI);
 
 		Rotation = Rotation_Quaternion.toEulerAngle();
-	}
+	}*/
 
 	//if(modelTexture != nullptr) Rotation._y += 10.0f;
 	//if (modelTexture == nullptr) Position._x += 0.3f;
