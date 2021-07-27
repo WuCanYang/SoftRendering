@@ -107,4 +107,73 @@ public:
 	bool TestFlags(int f) const;
 };
 
+//SimpVert Functions
+//----------------------------------------------------------------
 
+inline void SimpVert::EnableFlags(int f)
+{
+	flags |= f;
+}
+
+inline void SimpVert::DisableFlags(int f)
+{
+	flags &= ~f;
+}
+
+inline bool SimpVert::TestFlags(int f) const
+{
+	return (flags & f) == f;
+}
+
+
+//SimpTri Functions
+//----------------------------------------------------------------
+
+
+inline void SimpTri::EnableFlags(int f)
+{
+	flags |= f;
+}
+
+inline void SimpTri::DisableFlags(int f)
+{
+	flags &= ~f;
+}
+
+inline bool SimpTri::TestFlags(int f) const
+{
+	return (flags & f) == f;
+}
+
+inline bool SimpTri::HasVertex(const SimpVert* v) const
+{
+	return v == verts[0] || v == verts[1] || v == verts[2];
+}
+
+inline Vector3 SimpTri::GetNormal() const
+{
+	Vector3 n = (verts[2]->GetPos() - verts[0]->GetPos()).cross(verts[1]->GetPos() - verts[0]->GetPos());
+	n.Normalize();
+	return n;
+}
+
+
+
+//SimpEdge Functions
+//----------------------------------------------------------------
+
+
+inline void SimpEdge::EnableFlags(int f)
+{
+	flags |= f;
+}
+
+inline void SimpEdge::DisableFlags(int f)
+{
+	flags &= ~f;
+}
+
+inline bool SimpEdge::TestFlags(int f) const
+{
+	return (flags & f) == f;
+}

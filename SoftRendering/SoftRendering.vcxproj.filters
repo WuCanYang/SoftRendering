@@ -149,5 +149,11 @@
     <ClInclude Include="MeshSimplifier\Hash.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="MeshSimplifier\BinaryHeap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Vector3d.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

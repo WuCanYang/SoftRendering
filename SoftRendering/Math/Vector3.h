@@ -41,11 +41,27 @@ public:
 		return Vector3(_x / a, _y / a, _z / a);
 	}
 
-	inline Vector3 operator-=(const Vector3& a)
+	inline Vector3& operator-=(const Vector3& a)
 	{
 		_x -= a._x;
 		_y -= a._y;
 		_z -= a._z;
+		return *this;
+	}
+
+	inline Vector3& operator+=(const Vector3& a)
+	{
+		_x += a._x;
+		_y += a._y;
+		_z += a._z;
+		return *this;
+	}
+
+	inline Vector3& operator*=(const float& a)
+	{
+		_x *= a;
+		_y *= a;
+		_z *= a;
 		return *this;
 	}
 
@@ -57,6 +73,13 @@ public:
 	inline bool operator!=(const Vector3& a) const
 	{
 		return _x != a._x || _y != a._y || _z != a._z;
+	}
+
+	inline float operator[](const int idx) const
+	{
+		if (idx == 0) return _x;
+		else if (idx == 1) return _y;
+		else return _z;
 	}
 
 	inline float dot(const Vector3& a) const
@@ -81,7 +104,7 @@ public:
 		_z /= val;
 	}
 
-	inline float length()
+	inline float length() const
 	{
 		return sqrtf(powf(_x, 2) + powf(_y, 2) + powf(_z, 2));
 	}

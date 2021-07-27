@@ -46,6 +46,12 @@ public:
 		return EdgeArray.size();
 	}
 
+	SimpEdge* GetEdgePtr(unsigned int index)
+	{
+		check(index < EdgeArray.size());
+		return &EdgeArray[index];
+	}
+
 private:
 
 	void GroupVerts(std::vector<SimpVert>& Verts);		//对具有相同位置的顶点放在 一个组里面，通过双向循环链表进行连接

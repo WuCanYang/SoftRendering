@@ -3,11 +3,16 @@
 #include "Math/Vector3.h"
 #include "Math/Vector4.h"
 #include "SimplifierMacros.h"
+#include "SimplifierDataStructure.h"
 
 template<int NumTexCoords>
 class BasicVertexAttrs
 {
 public:
+	typedef DenseBMatrix<13 + NumTexCoords>			DenseBMatrixType;		//属性写成的矩阵
+	typedef DenseVecD<13 + NumTexCoords>			DenseVecDType;			//属性写成的向量
+
+
 	Vector3			Normal;      // 0, 1, 2
 	Vector3			Tangent;     // 3, 4, 5
 	Vector3         BiTangent;   // 6, 7, 8
@@ -113,6 +118,8 @@ public:
 
 public:
 
+	typedef	DenseArrayWrapper<float>		DenseAttrAccessor;
+
 	BasicVertexAttrs() :
 		Normal(1),
 		Tangent(1),
@@ -139,6 +146,9 @@ public:
 	}
 
 	static int Size() { return 13 + NumTexCoords; }
+
+	DenseAttrAccessor  AsDenseAttrAccessor() { return DenseAttrAccessor((float*)&Normal, Size()); }
+	const DenseAttrAccessor  AsDenseAttrAccessor() const { return DenseAttrAccessor((float*)&Normal, Size()); }
 
 	void Correct()
 	{
@@ -199,6 +209,7 @@ public:
 
 
 public:
+	typedef typename  BasicAttrContainerType::DenseAttrAccessor    DenseAttrAccessor;
 
 	unsigned int GetMaterialIndex() const { return MasterVertIndex; }
 	Vector3& GetPos() { return Position; }
@@ -233,6 +244,8 @@ public:
 	const BoneContainer& GetBoneContainer() const { return SparseBone; }
 
 	static int NumBaseAttributes() { return BasicAttrContainerType::Size(); }
+	DenseAttrAccessor GetBasicAttrAccessor() { return BasicAttributes.AsDenseAttrAccessor(); }
+	const DenseAttrAccessor GetBasicAttrAccessor() const { return BasicAttributes.AsDenseAttrAccessor(); }
 
 	void Correct()
 	{
