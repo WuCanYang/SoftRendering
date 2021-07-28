@@ -1,5 +1,6 @@
 #pragma once
 #include "Math/Vector3d.h"
+#include "Math/Vector2.h"
 #include "SimplifierMacros.h"
 #include <memory>
 #include <iostream>
@@ -76,6 +77,16 @@ public:
 		return Result;
 	}
 
+	SymmetricMatrix operator-(const SymmetricMatrix& Other) const
+	{
+		SymmetricMatrix Result(*this);
+		for (int i = 0; i < 6; ++i)
+		{
+			Result[i] -= Other[i];
+		}
+		return Result;
+	}
+
 	SymmetricMatrix& operator*=(const double Scalar)
 	{
 		for (int i = 0; i < 6; ++i)
@@ -145,8 +156,6 @@ static SymmetricMatrix ScaledProjectionOperator(const Vector3d& Vec)
 }
 
 
-
-
 //-------------------------------------------------------------------------------
 
 template<int Size>
@@ -158,7 +167,7 @@ public:
 
 	DenseVecD()
 	{
-		memset(Data, 0, sizeof(Data));
+		Reset();
 	}
 
 	DenseVecD(const DenseVecD& Other)
@@ -166,7 +175,36 @@ public:
 		memcpy(Data, Other.Data, sizeof(Data));
 	}
 
+	void Reset()
+	{
+		memset(Data, 0, sizeof(Data));
+	}
+
 	int size() const { return Size; }
+
+	void SetElement(const int idx, const double val)
+	{
+		check(idx < Size);
+		Data[idx] = val;
+	}
+
+	double GetElement(const int idx) const
+	{
+		check(idx < Size);
+		return Data[idx];
+	}
+
+	double& operator[](const int idx)
+	{
+		check(idx < Size);
+		return Data[idx];
+	}
+
+	const double& operator[](const int idx) const
+	{
+		check(idx < Size);
+		return Data[idx];
+	}
 
 	DenseVecD& operator=(const DenseVecD& Other)
 	{
@@ -197,7 +235,7 @@ public:
 		double Result;
 		for (int i = 0; i < Size; ++i)
 		{
-			Data[i] *= Other.Data[i];
+			Result += Data[i] * Other.Data[i];
 		}
 		return Result;
 	}
@@ -239,6 +277,24 @@ public:
 	}
 
 	int NumCols() const { return Cols; }
+
+	void SetColumn(int i, const Vector3d& val)
+	{
+		check(i < Cols);
+		Data[i] = val;
+	}
+
+	Vector3d& GetColumn(int i)
+	{
+		check(i < Cols);
+		return Data[i];
+	}
+
+	const Vector3d& GetColumn(int i) const
+	{
+		check(i < Cols);
+		return Data[i];
+	}
 
 	DenseBMatrix& operator=(const DenseBMatrix& Other)
 	{
@@ -304,6 +360,16 @@ static Vector3d operator*(const Vector3d& LhsVector, const SymmetricMatrix& SymM
 }
 
 
+template<int SIZE>
+SymmetricMatrix OuterProductOperator(const DenseBMatrix<SIZE>& DenseB)
+{
+	// counting on return value optimization
+	SymmetricMatrix Result;  // default zero initialization
+
+	for (int i = 0; i < SIZE; ++i)  Result += ScaledProjectionOperator(DenseB.GetColumn(i));
+
+	return Result;
+}
 
 //-------------------------------------------------------------------------------
 
@@ -578,7 +644,7 @@ static DMatrix operator*(const SymmetricMatrix& Sm, const DMatrix& Dm)
 		*  <FaceNormal | g> = 0
 		*
 		*
-		* In matrix form   ( PositionMatrix   Vec3(1) )   ( g )  = ( s )
+		* In matrix form   ( PositionMatrix   Vec3(1) )   ( g )  = ( s )		通过这个关系式计算出属性插值的梯度和距离（g 和 d）
 		*                  ( FaceNormal^T ,     0     )   ( d )    ( 0 )
 		*
 		* where the vector (Vec3d) 's' represents the per-vertex data that forms boundary conditions
@@ -656,7 +722,7 @@ private:
 
 
 template <typename DataType>
-class DenseArrayWrapper
+class DenseArrayWrapper			//基本属性的封装，通过地址操作让类中的属性能够通过数组的形式来进行访问
 {
 public:
 	typedef DataType    Type;
@@ -735,4 +801,104 @@ private:
 
 	DataType* Data; // Note: this object doesn't own the data!
 	int       Size;
+};
+
+
+//-------------------------------------------------------------------------------
+
+class AABB2d
+{
+	float Data[4];
+
+	float Clamp(float val, float mmin, float mmax) const
+	{
+		return val < mmin ? mmin : val > mmax ? mmax : val;
+	}
+
+public:
+	AABB2d()
+	{
+		Reset();
+	}
+
+	AABB2d(const AABB2d& Other)
+	{
+		Data[0] = Other.Data[0];
+		Data[1] = Other.Data[1];
+		Data[2] = Other.Data[2];
+		Data[3] = Other.Data[3];
+	}
+
+
+	void Reset()
+	{
+		Data[0] = FLT_MAX;
+		Data[1] = FLT_MAX;
+		Data[2] = -FLT_MAX;
+		Data[3] = -FLT_MAX;
+	}
+
+	void Union(const AABB2d& Other)
+	{
+		Data[0] = std::min(Data[0], Other.Data[0]);
+		Data[1] = std::min(Data[1], Other.Data[1]);
+
+		Data[2] = std::max(Data[2], Other.Data[2]);
+		Data[3] = std::max(Data[3], Other.Data[3]);
+	}
+
+	AABB2d& operator+=(const AABB2d& Other)
+	{
+		Union(Other);
+		return *this;
+	}
+
+	AABB2d& operator=(const AABB2d& Other)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			Data[i] = Other.Data[i];
+		}
+		return *this;
+	}
+
+	bool isValid() const
+	{
+		return (Data[0] <= Data[2]) && (Data[1] <= Data[3]);
+	}
+	
+	void ExpandToInclude(const Vector2& Point)
+	{
+		Data[0] = std::min(Data[0], Point._x);
+		Data[1] = std::min(Data[1], Point._y);
+
+		Data[2] = std::max(Data[2], Point._x);
+		Data[3] = std::max(Data[3], Point._y);
+	}
+
+	void ClampPoint(Vector2& Point) const
+	{
+		Point._x = Clamp(Point._x, Data[0], Data[2]);
+		Point._y = Clamp(Point._y, Data[1], Data[3]);
+	}
+
+	void ClampPoint(Vector2& Point, const float Fraction) const
+	{
+		const float halfFrac = Fraction * 0.5f;
+		const float padX = halfFrac * (Data[2] - Data[0]);
+		const float padY = halfFrac * (Data[3] - Data[1]);
+
+		Point._x = Clamp(Point._x, Data[0] - padX, Data[2] + padX);
+		Point._y = Clamp(Point._y, Data[1] - padY, Data[3] + padY);
+	}
+
+	Vector2 Min() const
+	{
+		return Vector2(Data[0], Data[1]);
+	}
+
+	Vector2 Max() const
+	{
+		return Vector2(Data[2], Data[3]);
+	}
 };

@@ -202,6 +202,7 @@ public:
 
 	BasicAttrContainerType				BasicAttributes;
 	
+	//附加属性原程序中好像就没有使用，只用了基本属性和骨骼，因此后面实现中都没有包括附加属性
 	AdditionalAttrContainerType			AdditionalAttributes;
 
 	BoneContainer						SparseBone;
