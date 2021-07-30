@@ -5,6 +5,7 @@
 #include "Model/OBJ_Loader.h"
 #include "Model/Constant.h"
 #include "MeshSimplifier/SkinnedMesh.h"
+#include "MeshSimplifier/Simplifier.h"
 
 SceneManager::SceneManager(): renderManager(nullptr), camera(nullptr), light(nullptr)
 {

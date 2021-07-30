@@ -17,7 +17,7 @@ public:
 
 	EdgeQuadric(const Vector3d& v0Pos, const Vector3d& v1Pos, const Vector3d& FaceNormal, const double EdgeWeight);
 
-	EdgeQuadric(EdgeQuadric& other) :
+	EdgeQuadric(const EdgeQuadric& other) :
 		CMatrix(other.CMatrix),
 		D0Vector(other.D0Vector),
 		Scalar(other.Scalar)
@@ -28,6 +28,7 @@ public:
 		CMatrix += other.CMatrix;
 		D0Vector += other.D0Vector;
 		Scalar += other.Scalar;
+		return *this;
 	}
 
 	// (n^T * v + d) ^ 2   =   v^T  (n * n^T ) v + 2d n^T v +  d * d
@@ -385,6 +386,7 @@ private:
 				DistanceVector.SetElement(i, -1. * AverageAttr);
 			}
 		}
+		return valid;
 	}
 
 

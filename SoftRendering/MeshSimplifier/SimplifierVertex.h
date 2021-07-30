@@ -196,7 +196,7 @@ public:
 	unsigned int	MaterialIndex;
 	Vector3			Position;
 
-	//Additional weight
+	//如果顶点收到某些重要骨骼的影响，那么最后的penalty应该加上这个值		只加一次，选边的顶点组的最大的那个
 	float           SpecializedWeight;
 
 
@@ -205,7 +205,7 @@ public:
 	//附加属性原程序中好像就没有使用，只用了基本属性和骨骼，因此后面实现中都没有包括附加属性
 	AdditionalAttrContainerType			AdditionalAttributes;
 
-	BoneContainer						SparseBone;
+	BoneContainer						SparseBones;
 
 
 
@@ -224,7 +224,7 @@ public:
 		SpecializedWeight(0.f),
 		BasicAttributes(),
 		AdditionalAttributes(),
-		SparseBone()
+		SparseBones()
 	{}
 
 	MeshVertType(const MeshVertType& other):
@@ -234,15 +234,15 @@ public:
 		SpecializedWeight(other.SpecializedWeight),
 		BasicAttributes(other.BasicAttributes),
 		AdditionalAttributes(other.AdditionalAttributes),
-		SparseBone(other.SparseBone)
+		SparseBones(other.SparseBones)
 	{}
 
 
 	AdditionalAttrContainerType& GetAdditionalAttrContainer() { return AdditionalAttributes; }
 	const AdditionalAttrContainerType& GetAdditionalAttrContainer() const { return AdditionalAttributes; }
 
-	BoneContainer& GetBoneContainer() { return SparseBone; }
-	const BoneContainer& GetBoneContainer() const { return SparseBone; }
+	BoneContainer& GetSparseBones() { return SparseBones; }
+	const BoneContainer& GetSparseBones() const { return SparseBones; }
 
 	static int NumBaseAttributes() { return BasicAttrContainerType::Size(); }
 	DenseAttrAccessor GetBasicAttrAccessor() { return BasicAttributes.AsDenseAttrAccessor(); }
@@ -252,7 +252,7 @@ public:
 	{
 		BasicAttributes.Correct();
 		AdditionalAttributes.Correct();
-		SparseBone.Correct();
+		SparseBones.Correct();
 	}
 
 	MeshVertType& operator=(const MeshVertType& other)
@@ -263,7 +263,7 @@ public:
 		SpecializedWeight		= other.SpecializedWeight;
 		BasicAttributes			= other.BasicAttributes;
 		AdditionalAttributes	= other.AdditionalAttributes;
-		SparseBone				= other.SparseBone;
+		SparseBones				= other.SparseBones;
 
 		return *this;
 	}

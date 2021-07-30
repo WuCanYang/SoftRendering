@@ -232,7 +232,7 @@ public:
 
 	double dot(const DenseVecD& Other) const
 	{
-		double Result;
+		double Result = 0.;
 		for (int i = 0; i < Size; ++i)
 		{
 			Result += Data[i] * Other.Data[i];
@@ -242,7 +242,7 @@ public:
 
 	double L2NormSqr() const
 	{
-		double Result;
+		double Result = 0.;
 		for (int i = 0; i < Size; ++i)
 		{
 			Result += Data[i] * Data[i];

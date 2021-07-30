@@ -2,6 +2,33 @@
 #include "MeshManager.h"
 #include "BinaryHeap.h"
 #include "SimplifierQuadrics.h"
+#include "SimplifierQuadricsCache.h"
+
+class SimplifierTerminator
+{
+public:
+
+	int   MinTriNumToRetain;
+	int   MinVertNumToRetain;
+	float MaxFeatureCost;
+	float MaxDistance;
+
+	SimplifierTerminator(int minTri, int minVert, float maxCost, float maxDist):
+		MinTriNumToRetain(minTri),
+		MinVertNumToRetain(minVert),
+		MaxFeatureCost(maxCost),
+		MaxDistance(maxDist)
+	{}
+
+	bool operator()(const int TriNum, const int VertNum, const float Error)
+	{
+		if (TriNum < MinTriNumToRetain || VertNum < MinVertNumToRetain || Error > MaxFeatureCost)
+		{
+			return true;
+		}
+		return false;
+	}
+};
 
 class MeshSimplifier
 {
@@ -14,10 +41,11 @@ public:
 
 	MeshManager			meshManager;
 
-	DenseVecDType	BasicAttrWeights;
-
+	DenseVecDType		BasicAttrWeights;
 
 	FBinaryHeap<double>	CollapseCostHeap;
+
+	QuadricCache		quadricCache;
 
 
 	double               VolumeImportance;			//体积保护权重
@@ -32,6 +60,24 @@ public:
 
 	double               BoundaryConstraintWeight = 256.;		//边界约束权重
 
+protected:
+
+	void InitCost();
+
+	//下面四个函数调用包含从上到下， 流程：计算边和面的Quadric  --->  求得一个坍缩后的位置   --->   根据位置计算出顶点属性   --->    根据位置和属性评估一个代价
+	double  ComputeEdgeCollapseCost(SimpEdge* edge);
+	double  ComputeEdgeCollapseVertsAndCost(SimpEdge* edge, EdgeVertTupleArray& newVerts);
+	void	ComputeEdgeCollapseVertsAndQuadrics(SimpEdge* edge, EdgeVertTupleArray& newVerts, EdgeQuadric& newEdgeQuadric, std::vector<WedgeQuadric>& newQuadrics);
+	Vector3 ComputeEdgeCollapseVertsPos(SimpEdge* edge, EdgeVertTupleArray& newVerts, std::vector<WedgeQuadric>& quadrics, EdgeQuadric& edgeQuadric);
+
+
+	void ComputeEdgeCollapseVertsAndFixBones(SimpEdge* edge, EdgeVertTupleArray& newVerts);
+	void ComputeEdgeCollapseVerts(SimpEdge* edge, EdgeVertTupleArray& newVerts);
+
+
+	WedgeQuadric GetWedgeQuadric(SimpVert* v);
+
+	EdgeQuadric  GetEdgeQuadric(SimpVert* v);
 
 
 public:
@@ -40,14 +86,6 @@ public:
 		const unsigned int* InSrcIndexes, const unsigned int InNumSrcIndexes,
 		const float VolumeImportanceValue, const bool VolumeConservation, const bool bEnforceBoundaries);
 
-	void InitCost();
 
-	//下面四个函数调用包含从上到下
-	double  ComputeEdgeCollapseCost(SimpEdge* edge);
-	double  ComputeEdgeCollapseVertsAndCost(SimpEdge* edge, EdgeVertTupleArray& newVerts);
-	void	ComputeEdgeCollapseVertsAndQuadrics(SimpEdge* edge, EdgeVertTupleArray& newVerts, EdgeQuadric& newEdgeQuadric, std::vector<WedgeQuadric>& newQuadrics);
-	Vector3 ComputeEdgeCollapseVertsPos(SimpEdge* edge, EdgeVertTupleArray& newVerts, std::vector<WedgeQuadric>& quadrics, EdgeQuadric& edgeQuadric);
-
-
-	float SimplifyMesh();
+	float SimplifyMesh(SimplifierTerminator Terminator);
 };
