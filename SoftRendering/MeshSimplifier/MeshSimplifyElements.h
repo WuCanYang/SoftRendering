@@ -30,7 +30,7 @@ public:
 
 public:
 
-	SimpVert() :flags(SIMP_DEFAULT), prev(nullptr), next(nullptr) {}
+	SimpVert() :flags(SIMP_DEFAULT), prev(this), next(this) {}
 
 	Vector3& GetPos() { return vert.GetPos(); }
 	const Vector3& GetPos() const { return vert.GetPos(); }
@@ -99,7 +99,7 @@ public:
 
 public:
 
-	SimpEdge() :flags(SIMP_DEFAULT), v0(nullptr), v1(nullptr), prev(nullptr), next(nullptr) {}
+	SimpEdge() :flags(SIMP_DEFAULT), v0(nullptr), v1(nullptr), prev(this), next(this) {}
 
 
 	void EnableFlags(int f);

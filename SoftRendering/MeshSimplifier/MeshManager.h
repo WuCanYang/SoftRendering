@@ -26,6 +26,21 @@ public:
 	MeshManager(const MeshVertType* InSrcVerts, const unsigned int InNumSrcVerts,
 		const unsigned int* InSrcIndexes, const unsigned int InNumSrcIndexes);
 
+	template<typename ArrayElement>
+	void AddUnique(std::vector<ArrayElement>& array, const ArrayElement& val)
+	{
+		bool exist = false;
+		for (ArrayElement& ele : array)
+		{
+			if (ele == val)
+			{
+				exist = true;
+				break;
+			}
+		}
+		if (!exist) array.push_back(val);
+	}
+
 	void GetVertsInGroup(const SimpVert& seedVert, std::vector<SimpVert*>& InOutVertGroup) const;	//获取同一个组里面的顶点（具有相同位置的顶点）
 
 	unsigned int GetVertIndex(const SimpVert* vert) const
@@ -169,9 +184,9 @@ public:
 	void PropagateFlag(SimpVert& MemberOfGroup)
 	{
 		// spread locked flag to vert group
-		uint32 flags = 0;
+		unsigned int flags = 0;
 
-		SimpVertType* v = &MemberOfGroup;
+		SimpVert* v = &MemberOfGroup;
 		do {
 			flags |= v->flags & FlagToPropagate;
 			v = v->next;
@@ -193,9 +208,9 @@ public:
 		GetVertsInGroup(seedVert, VertsInVertGroup);
 
 		// Unlink any verts that are marked as SIMP_REMOVED
-		for (int32 i = 0, Imax = VertsInVertGroup.size(); i < Imax; ++i)
+		for (int i = 0, Imax = VertsInVertGroup.size(); i < Imax; ++i)
 		{
-			SimpVertType* v = VertsInVertGroup[i];
+			SimpVert* v = VertsInVertGroup[i];
 			if (v->TestFlags(FlagValue))
 			{
 				// ungroup
@@ -210,6 +225,50 @@ public:
 		}
 
 	}
+
+	int RemoveIfDegenerate(std::vector<SimpTri*>& CandidateTrisPtrArray);
+
+	int RemoveIfDegenerate(std::vector<SimpVert*>& CandidateVertPtrArray);
+
+	int RemoveIfDegenerate(std::vector<SimpEdge*>& CandidateEdges, std::vector<unsigned int>& RemoveEdgeIdxArray);
+
+	void RebuildEdgeLinkLists(std::vector<SimpEdge*>& CandidateEdgePtrArray);		//重新对容器中的边进行分组
+
+	int RemoveDegenerateTris();
+
+	int RemoveDegenerateVerts();
+
+public:
+
+	void FlagBoundary(const SimpElementFlags Flag);
+
+	void GetCoincidentVertGroups(std::vector<SimpVert*> CoincidentVertGroups);
+
+	struct VertAndID
+	{
+		int ID;
+		SimpVert* SrcVert;
+
+		VertAndID() {};
+		VertAndID(SimpVert* SV, int InID)
+		{
+			ID = InID;
+			SrcVert = SV;
+		}
+	};
+
+	enum class VtxElementWeld
+	{
+		Normal,
+		Tangent,
+		BiTangent,
+		Color,
+		UV,
+	};
+
+	void WeldNonSplitBasicAttributes(VtxElementWeld WeldType);
+
+	void OutputMesh(MeshVertType* Verts, unsigned int* Indexes, std::vector<int>* LockedVerts = nullptr);
 
 private:
 
@@ -226,6 +285,11 @@ private:
 		unsigned int vi = GetVertIndex(v);
 
 		return Murmur32({ std::min(ui, vi), std::max(ui, vi) });
+	}
+
+	unsigned int HashEdgePosition(const SimpEdge& Edge)
+	{
+		return HashPoint(Edge.v0->GetPos()) ^ HashPoint(Edge.v1->GetPos());
 	}
 
 	std::pair<unsigned int, unsigned int> GetEdgeHashPair(const SimpVert* u, const SimpVert* v) const

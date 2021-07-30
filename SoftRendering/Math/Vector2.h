@@ -26,6 +26,20 @@ public:
 		return Vector2(_x - a._x, _y - a._y);
 	}
 
+	inline Vector2& operator+=(const Vector2& a)
+	{
+		_x += a._x;
+		_y += a._y;
+		return *this;
+	}
+
+	inline Vector2& operator/=(const float& a)
+	{
+		_x /= a;
+		_y /= a;
+		return *this;
+	}
+
 	inline bool operator==(const Vector2& a)
 	{
 		return _x == a._x && _y == a._y;

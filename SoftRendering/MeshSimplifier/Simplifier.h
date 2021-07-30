@@ -35,6 +35,7 @@ class MeshSimplifier
 	typedef typename std::tuple<SimpVert*, SimpVert*, MeshVertType>		EdgeVertTuple;
 	typedef	typename std::vector<EdgeVertTuple>							EdgeVertTupleArray;
 
+public:
 	typedef BasicVertexAttrs<MAX_TEXCOORDS>::DenseVecDType				DenseVecDType;
 
 public:
@@ -74,6 +75,7 @@ protected:
 	void ComputeEdgeCollapseVertsAndFixBones(SimpEdge* edge, EdgeVertTupleArray& newVerts);
 	void ComputeEdgeCollapseVerts(SimpEdge* edge, EdgeVertTupleArray& newVerts);
 
+	void UpdateEdgeCollapseCost(std::vector<SimpEdge*>& DirtyEdges);
 
 	WedgeQuadric GetWedgeQuadric(SimpVert* v);
 
@@ -87,5 +89,26 @@ public:
 		const float VolumeImportanceValue, const bool VolumeConservation, const bool bEnforceBoundaries);
 
 
+	int GetNumVerts() const { return meshManager.ReducedNumVerts; }
+
+	int GetNumTris() const { return meshManager.ReducedNumTris; }
+
+	void SetBoundaryConstraintWeight(const double Weight)
+	{
+		BoundaryConstraintWeight = Weight;
+	}
+
+	void SetAttributeWeights(const DenseVecDType& Weights)
+	{
+		BasicAttrWeights = Weights;
+	}
+
+	void SetBoundaryLocked()
+	{
+		meshManager.FlagBoundary(SimpElementFlags::SIMP_LOCKED);
+	}
+
 	float SimplifyMesh(SimplifierTerminator Terminator);
+
+	void OutputMesh(MeshVertType* Verts, unsigned int* Indexes, bool MergeCoincidentVertBones = true, bool WeldVtxColorAttrs = true, std::vector<int>* LockedVerts = nullptr);
 };

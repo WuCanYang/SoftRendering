@@ -9,8 +9,8 @@ template<int NumTexCoords>
 class BasicVertexAttrs
 {
 public:
-	typedef DenseBMatrix<13 + NumTexCoords>			DenseBMatrixType;		//属性写成的矩阵
-	typedef DenseVecD<13 + NumTexCoords>			DenseVecDType;			//属性写成的向量
+	typedef DenseBMatrix<13 + 2 * NumTexCoords>			DenseBMatrixType;		//属性写成的矩阵
+	typedef DenseVecD<13 + 2 * NumTexCoords>			DenseVecDType;			//属性写成的向量
 
 
 	Vector3			Normal;      // 0, 1, 2
@@ -145,7 +145,7 @@ public:
 		}
 	}
 
-	static int Size() { return 13 + NumTexCoords; }
+	static int Size() { return 13 + 2 * NumTexCoords; }
 
 	DenseAttrAccessor  AsDenseAttrAccessor() { return DenseAttrAccessor((float*)&Normal, Size()); }
 	const DenseAttrAccessor  AsDenseAttrAccessor() const { return DenseAttrAccessor((float*)&Normal, Size()); }
@@ -173,6 +173,11 @@ public:
 class BoneSparseVertexAttrs
 {
 public:
+
+	bool operator==(const BoneSparseVertexAttrs& Other) const
+	{
+		return true;
+	}
 
 	void Correct()
 	{
@@ -266,5 +271,18 @@ public:
 		SparseBones				= other.SparseBones;
 
 		return *this;
+	}
+
+	bool operator==(const MeshVertType& Other) const
+	{
+		bool bIsEqual = (MaterialIndex == Other.MaterialIndex) &&
+			(MasterVertIndex == Other.MasterVertIndex) &&
+			(Position == Other.Position);
+		bIsEqual = bIsEqual && (SpecializedWeight == Other.SpecializedWeight);
+		bIsEqual = bIsEqual && (GetBasicAttrAccessor() == Other.GetBasicAttrAccessor());
+		bIsEqual = bIsEqual && (GetAdditionalAttrContainer() == Other.GetAdditionalAttrContainer());
+		bIsEqual = bIsEqual && (SparseBones == Other.SparseBones);
+
+		return bIsEqual;
 	}
 };

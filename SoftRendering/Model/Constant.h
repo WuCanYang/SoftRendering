@@ -10,13 +10,36 @@
 #define SHADOW_HEIGHT 1024
 
 
-#define GENERAL true		//模式三选一
+#define GENERAL false		//模式三选一
 #define SHADOW false
-#define WIREFRAME false
+#define WIREFRAME true
 
 
 
 #define QUATERNION false
 
+//-----------------------模型简化设置
 
-#define EnableMeshSimplify false
+#define EnableMeshSimplify			true
+
+
+// 0 - 1 的值， 例如为0.9， 那么留下 90% 的三角形数量或顶点数量
+#define RemainPercent				0.5f		
+
+
+//体积权重
+#define VolumeImportance__			1.0f
+
+//是否开启体积保护
+#define PreserveVolume__			true
+
+
+//是否检查骨骼
+#define CheckBoneBoundaries__		true
+
+
+//边界约束权重
+#define EdgeWeightValue__			128.0f
+
+
+#define LockEdges__					true

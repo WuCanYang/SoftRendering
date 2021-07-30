@@ -19,5 +19,5 @@ void SoftRender::frame()
 	renderManager.frame();
 	displayManager.frame();
 	double end = clock();
-	std::cout << "FPS: " << CLOCKS_PER_SEC / (end - start) << std::endl;
+	//std::cout << "FPS: " << CLOCKS_PER_SEC / (end - start) << std::endl;
 }

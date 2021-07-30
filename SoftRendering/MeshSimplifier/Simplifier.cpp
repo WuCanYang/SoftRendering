@@ -314,6 +314,28 @@ void MeshSimplifier::ComputeEdgeCollapseVerts(SimpEdge* edge, EdgeVertTupleArray
 	ComputeEdgeCollapseVertsAndQuadrics(edge, newVerts, edgeQuadric, WedgeQuadricArray);
 }
 
+void MeshSimplifier::UpdateEdgeCollapseCost(std::vector<SimpEdge*>& DirtyEdges)
+{
+	int NumEdges = DirtyEdges.size();
+	for (int i = 0; i < NumEdges; ++i)
+	{
+		SimpEdge* edge = DirtyEdges[i];
+		if(edge->TestFlags(SIMP_REMOVED)) continue;
+
+		double cost = ComputeEdgeCollapseCost(edge);
+		SimpEdge* e = edge;
+		do 
+		{
+			unsigned int idx = meshManager.GetEdgeIndex(e);
+			if (CollapseCostHeap.IsPresent(idx))
+			{
+				CollapseCostHeap.Update(cost, idx);
+			}
+			e = e->next;
+		} while (e != edge);
+	}
+}
+
 WedgeQuadric MeshSimplifier::GetWedgeQuadric(SimpVert* v)
 {
 	const auto QuadricFactory = [this](const SimpTri& tri) -> WedgeQuadric
@@ -340,6 +362,8 @@ float MeshSimplifier::SimplifyMesh(SimplifierTerminator Terminator)
 	//如果开启，那么当某一次坍缩边产生的新顶点到周围某一个面的距离 大于 Terminator.MaxDistance的时候，结束简化
 	bool CheckDistance = Terminator.MaxDistance < FLT_MAX;
 
+
+	//边坍缩后受影响的顶点、三角形和边
 	std::vector<SimpVert*> DirtyVerts;
 	std::vector<SimpTri*>  DirtyTris;
 	std::vector<SimpEdge*> DirtyEdges;
@@ -439,7 +463,7 @@ float MeshSimplifier::SimplifyMesh(SimplifierTerminator Terminator)
 		meshManager.UpdateVertexAttriuteIDs(CoincidentEdges);	//更新留下的点的属性id
 
 
-		for (int i = 0; i < CoincidentEdgesNum; ++i)
+		for (int i = 0; i < CoincidentEdgesNum; ++i)	//边坍缩
 		{
 			SimpEdge* EdgePtr = CoincidentEdges[i];
 
@@ -455,8 +479,64 @@ float MeshSimplifier::SimplifyMesh(SimplifierTerminator Terminator)
 			meshManager.RemoveEdgeIfInvalid(CoincidentEdges, InvalidIdxArray);
 		}
 
+		meshManager.MergeGroups(TopEdgePtr->v0, TopEdgePtr->v1);
+		meshManager.PropagateFlag<SIMP_REMOVED>(*TopEdgePtr->v1);
+		meshManager.PruneVerts<SIMP_REMOVED>(*TopEdgePtr->v1);
 
+
+
+		meshManager.RemoveIfDegenerate(DirtyTris);
+
+		meshManager.RemoveIfDegenerate(DirtyVerts);
+
+		meshManager.RemoveIfDegenerate(DirtyEdges, InvalidIdxArray);
+
+		meshManager.RebuildEdgeLinkLists(DirtyEdges);
+
+		const int InvalidNum = InvalidIdxArray.size();
+		for (int i = 0; i < InvalidNum; ++i)
+		{
+			CollapseCostHeap.Remove(InvalidIdxArray[i]);
+		}
+
+		UpdateEdgeCollapseCost(DirtyEdges);
+
+		DirtyVerts.clear();
+		DirtyEdges.clear();
+		DirtyTris.clear();
 	}
 
-	return 0;
+	meshManager.RemoveDegenerateTris();
+	meshManager.RemoveDegenerateVerts();
+
+	return CheckDistance ? distError : maxError;
+}
+
+void MeshSimplifier::OutputMesh(MeshVertType* Verts, unsigned int* Indexes, bool MergeCoincidentVertBones /*= true*/, bool WeldVtxColorAttrs /*= true*/, std::vector<int>* LockedVerts /*= nullptr*/)
+{
+	if (MergeCoincidentVertBones)		//确保同一个位置的顶点 受到的骨骼影响是相同的
+	{
+		std::vector<SimpVert*> CoincidentVertGroups;
+		meshManager.GetCoincidentVertGroups(CoincidentVertGroups);
+
+		int size = CoincidentVertGroups.size();
+		for (int i = 0; i < size; ++i)
+		{
+			SimpVert* vert = CoincidentVertGroups[i];
+			const auto& SparseBone = vert->vert.SparseBones;
+			SimpVert* tmp = vert->next;
+			while (tmp != vert)
+			{
+				tmp->vert.SparseBones = SparseBone;
+				tmp = tmp->next;
+			}
+		}
+	}
+
+	if (WeldVtxColorAttrs)		//把同一个组下 具有相同ID的顶点的属性取平均
+	{
+		meshManager.WeldNonSplitBasicAttributes(MeshManager::VtxElementWeld::Color);
+	}
+
+	meshManager.OutputMesh(Verts, Indexes, LockedVerts);
 }

@@ -65,6 +65,14 @@ public:
 		return *this;
 	}
 
+	inline Vector3& operator/=(const float& a)
+	{
+		_x /= a;
+		_y /= a;
+		_z /= a;
+		return *this;
+	}
+
 	inline bool operator==(const Vector3& a) const
 	{
 		return _x == a._x && _y == a._y && _z == a._z;

@@ -93,11 +93,7 @@ void SceneManager::loadModel(std::string name)
 
 	if (EnableMeshSimplify)
 	{
-		SkinnedMesh Mesh;
-		ConvertToSkinnedMesh(m, Mesh);
-
-
-		ConvertToModelMesh(Mesh, m);
+		SimplifyMesh(m);
 	}
 
 	models.push_back(m);
@@ -182,7 +178,8 @@ void SceneManager::loadLight()
 void SceneManager::loadCamera()
 {
 	camera = new Camera;
-	camera->Position = Vector3(0.0f, 4.0f, 2.0f);
+	//camera->Position = Vector3(0.0f, 4.0f, 2.0f);
+	camera->Position = Vector3(0.0f, 0.5f, 1.3f);
 	if (!models.empty())
 	{
 		//camera->Target = Vector3(0.0f, 0.0f, -1.0f);//Vector3(0.0f); //models[0]->Position;
@@ -218,6 +215,137 @@ Camera* SceneManager::GetCamera()
 {
 	return camera;
 }
+
+void SceneManager::ComputeUVBounds(SkinnedMesh& Mesh, std::vector<Vector2>& UVBounds)
+{
+	const int NumValidUVs = Mesh.TexCoordCount();
+	for (int i = 0; i < NumValidUVs; ++i)
+	{
+		UVBounds[2 * i] = Vector2(FLT_MAX, FLT_MAX);
+		UVBounds[2 * i + 1] = Vector2(-FLT_MAX, -FLT_MAX);
+	}
+
+	for (int i = 0; i < Mesh.NumVertices(); ++i)
+	{
+		const auto& Attrs = Mesh.VertexBuffer[i].BasicAttributes;
+		for (int t = 0; t < NumValidUVs; ++t)
+		{
+			UVBounds[2 * t]._x = std::min(Attrs.TexCoords[t]._x, UVBounds[2 * t]._x);
+			UVBounds[2 * t]._y = std::min(Attrs.TexCoords[t]._y, UVBounds[2 * t]._y);
+
+			UVBounds[2 * t + 1]._x = std::max(Attrs.TexCoords[t]._x, UVBounds[2 * t + 1]._x);
+			UVBounds[2 * t + 1]._y = std::max(Attrs.TexCoords[t]._y, UVBounds[2 * t + 1]._y);
+		}
+	}
+}
+
+void SceneManager::SimplifyMesh(Model* m)
+{
+	SkinnedMesh Mesh;
+	ConvertToSkinnedMesh(m, Mesh);
+	int RemainVerts			= RemainPercent * m->Vertices.size();
+	int RemainTris			= RemainPercent * m->VerticesIndices.size();
+	float MaxDistance		= FLT_MAX;
+	float MaxFeatureCost	= FLT_MAX;
+	std::cout << "target size    "<<RemainTris << "  " << RemainVerts << std::endl;
+	SimplifierTerminator Terminator(RemainTris, RemainVerts, MaxFeatureCost, MaxDistance);
+
+	double NormalWeight = 16.00;
+	double TangentWeight = 0.10;
+	double BiTangentWeight = 0.10;
+	double UVWeight = 0.50;
+	double BoneWeight = 0.25;
+	double ColorWeight = 0.10;
+
+	const int NumUVs = MAX_TEXCOORDS;
+	std::vector<Vector2> UVBounds(2 * NumUVs);
+	ComputeUVBounds(Mesh, UVBounds);
+
+	MeshSimplifier::DenseVecDType	BasicAttrWeights;
+	{
+
+		// Normal
+		BasicAttrWeights[0] = NormalWeight;
+		BasicAttrWeights[1] = NormalWeight;
+		BasicAttrWeights[2] = NormalWeight;
+
+		//Tangent
+		BasicAttrWeights[3] = TangentWeight;
+		BasicAttrWeights[4] = TangentWeight;
+		BasicAttrWeights[5] = TangentWeight;
+		//BiTangent
+		BasicAttrWeights[6] = BiTangentWeight;
+		BasicAttrWeights[7] = BiTangentWeight;
+		BasicAttrWeights[8] = BiTangentWeight;
+
+		//Color
+		BasicAttrWeights[9] = ColorWeight; // r
+		BasicAttrWeights[10] = ColorWeight; // b
+		BasicAttrWeights[11] = ColorWeight; // b
+		BasicAttrWeights[12] = ColorWeight; // alpha
+
+
+		const int NumNonUVAttrs = 13;
+
+		// Number of UVs actually used.
+		const int NumValidUVs = Mesh.TexCoordCount();
+		for (int i = 0; i < NumValidUVs; ++i)
+		{
+			Vector2& UVMin = UVBounds[2 * i];
+			Vector2& UVMax = UVBounds[2 * i + 1];
+
+			double URange = UVMax._x - UVMin._x;
+			double VRange = UVMax._y - UVMin._y;
+
+			double UWeight = (abs(URange) > 1.e-5) ? UVWeight / URange : 0.;
+			double VWeight = (abs(VRange) > 1.e-5) ? UVWeight / VRange : 0.;
+
+			BasicAttrWeights[NumNonUVAttrs + 2 * i] = UWeight; // U
+			BasicAttrWeights[NumNonUVAttrs + 2 * i + 1] = VWeight; // V
+		}
+
+		for (int i = NumNonUVAttrs; i < NumNonUVAttrs + NumValidUVs * 2; ++i)
+		{
+			BasicAttrWeights[i] = UVWeight; // 0.5;
+		}
+
+		for (int i = NumNonUVAttrs + NumValidUVs * 2; i < NumNonUVAttrs + NumUVs * 2; ++i)
+		{
+			BasicAttrWeights[i] = 0.;
+		}
+
+	}
+
+
+
+	MeshSimplifier  Simplifier(Mesh.VertexBuffer, (unsigned int)Mesh.NumVertices(),
+							   Mesh.IndexBuffer, (unsigned int)Mesh.NumIndices(),
+							   VolumeImportance__, PreserveVolume__, CheckBoneBoundaries__);
+
+	Mesh.Empty();
+
+	{
+		Simplifier.SetBoundaryConstraintWeight(EdgeWeightValue__);
+
+		Simplifier.SetAttributeWeights(BasicAttrWeights);
+
+		if (LockEdges__)
+		{
+			Simplifier.SetBoundaryLocked();
+		}
+	}
+
+	Simplifier.SimplifyMesh(Terminator);
+
+	Mesh.Resize(Simplifier.GetNumTris(), Simplifier.GetNumVerts());
+
+	Simplifier.OutputMesh(Mesh.VertexBuffer, Mesh.IndexBuffer);
+
+	Mesh.Compact();
+
+	ConvertToModelMesh(Mesh, m);
+}
+
 
 void SceneManager::ConvertToSkinnedMesh(Model* m, SkinnedMesh& outMesh)
 {
@@ -308,3 +436,5 @@ void SceneManager::ConvertToModelMesh(SkinnedMesh& inMesh, Model* m)
 	std::cout << "After simplify, the tris Num:   " << TrisNum << std::endl;
 	std::cout << "After simplify, the vert Num:   " << VertsNum << std::endl;
 }
+
+

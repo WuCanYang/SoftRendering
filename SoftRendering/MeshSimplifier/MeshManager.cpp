@@ -1,6 +1,7 @@
 #include "MeshManager.h"
 #include "MeshSimplifyElements.h"
 #include <iostream>
+#include <algorithm>
 
 MeshManager::MeshManager(const MeshVertType* InSrcVerts, const unsigned int InNumSrcVerts, 
 	const unsigned int* InSrcIndexes, const unsigned int InNumSrcIndexes):
@@ -27,6 +28,9 @@ MeshManager::MeshManager(const MeshVertType* InSrcVerts, const unsigned int InNu
 		{
 			int index = offset + j;
 			int VertIndex = InSrcIndexes[index];
+
+			check(index < InNumSrcIndexes);
+			check(VertIndex < InNumSrcVerts);
 
 			TriArray[i].verts[j] = &VertArray[VertIndex];
 		}
@@ -83,7 +87,7 @@ void MeshManager::GroupVerts(std::vector<SimpVert>& Verts)
 	{
 		SimpVert* v1 = &Verts[i];
 
-		if(v1->next == v1) continue;
+		if(v1->next != v1) continue;
 
 		const unsigned int hash = HashValues[i];
 		auto range = HashTable.equal_range(hash);
@@ -261,24 +265,17 @@ void MeshManager::MakeEdges(const std::vector<SimpVert>& Verts, const int NumTri
 {
 	const int NumVerts = Verts.size();
 
-	int maxEdgeSize = std::min(3 * NumTris, 3 * NumVerts - 6);
 	Edges.clear();
 	for (int i = 0; i < NumVerts; i++)
 	{
 		AppendConnectedEdges(&Verts[i], Edges);
 	}
 
-	// Guessed wrong on num edges. Array was resized so fix up pointers.
-
-	if (Edges.size() > maxEdgeSize)
+	for (int i = 0; i < Edges.size(); ++i)
 	{
-
-		for (int i = 0; i < Edges.size(); ++i)
-		{
-			SimpEdge& edge = Edges[i];
-			edge.next = &edge;
-			edge.prev = &edge;
-		}
+		SimpEdge& edge = Edges[i];
+		edge.next = &edge;
+		edge.prev = &edge;
 	}
 }
 
@@ -294,7 +291,7 @@ void MeshManager::AppendConnectedEdges(const SimpVert* Vert, std::vector<SimpEdg
 	{
 		if (v0 < v1)	//以地址存放顺序来保证边不重复
 		{
-			Edges.push_back(SimpEdge());
+			Edges.emplace_back();
 			SimpEdge& edge = Edges.back();
 			edge.v0 = v0;
 			edge.v1 = v1;
@@ -321,7 +318,7 @@ void MeshManager::GroupEdges(std::vector<SimpEdge>& Edges)
 	for (int i = 0; i < NumEdges; ++i)
 	{
 		SimpEdge* e1 = &Edges[i];
-		if (e1->next == e1) continue;
+		if (e1->next != e1) continue;
 
 		unsigned int hash = HashValues[i];
 		auto range = HashTable.equal_range(hash);
@@ -476,17 +473,7 @@ void MeshManager::GetAdjacentTopology(const SimpVert* vert, std::vector<SimpTri*
 	// Update all tris touching collapse edge.
 	for (auto it = v->adjTris.begin(); it != v->adjTris.end(); ++it)
 	{
-		bool exist = false;
-		for (auto t : DirtyTris)
-		{
-			if (t == *it)
-			{
-				exist = true;
-				break;
-			}
-		}
-
-		if (!exist) DirtyTris.push_back(*it);
+		AddUnique(DirtyTris, *it);
 	}
 
 	// Gather all verts that are adjacent to this one.
@@ -498,17 +485,7 @@ void MeshManager::GetAdjacentTopology(const SimpVert* vert, std::vector<SimpTri*
 	// Gather verts that are adjacent to VertPtr
 	for (int i = 0, Num = adjVerts.size(); i < Num; i++)
 	{
-		bool exist = false;
-		for (auto t : DirtyVerts)
-		{
-			if (t == adjVerts[i])
-			{
-				exist = true;
-				break;
-			}
-		}
-
-		if (!exist) DirtyVerts.push_back(adjVerts[i]);
+		AddUnique(DirtyVerts, adjVerts[i]);
 	}
 
 
@@ -535,17 +512,7 @@ void MeshManager::GetAdjacentTopology(const SimpVert* vert, std::vector<SimpTri*
 				{
 					SimpEdge* edge = FindEdge(AdjVert, vert);
 
-					bool exist = false;
-					for (auto t : DirtyEdges)
-					{
-						if (t == edge)
-						{
-							exist = true;
-							break;
-						}
-					}
-
-					if (!exist) DirtyEdges.push_back(edge);
+					AddUnique(DirtyEdges, edge);
 				}
 				vert->DisableFlags(SIMP_MARK1);
 			}
@@ -597,16 +564,7 @@ int MeshManager::RemoveEdgeIfInvalid(std::vector<SimpEdge*>& CandidateEdges, std
 
 			if (Idx < UINT32_MAX)
 			{
-				bool exist = false;
-				for (auto val : RemovedEdgeIdxArray)
-				{
-					if (val == Idx)
-					{
-						exist = true;
-						break;
-					}
-				}
-				if (!exist) RemovedEdgeIdxArray.push_back(Idx);
+				AddUnique(RemovedEdgeIdxArray, Idx);
 			}
 			CandidateEdges[i] = NULL;
 		}
@@ -738,6 +696,177 @@ void MeshManager::UpdateVertexAttriuteIDs(std::vector<SimpEdge*>& InCoincidentEd
 
 bool MeshManager::CollapseEdge(SimpEdge* EdgePtr, std::vector<unsigned int>& RemovedEdgeIdxArray)
 {
+	SimpVert* v0 = EdgePtr->v0;
+	SimpVert* v1 = EdgePtr->v1;
+
+	// Collapse the edge uv by moving vertex v0 onto v1
+	check(v0 && v1);
+	check(EdgePtr == FindEdge(v0, v1));
+
+	check(v0->adjTris.size() > 0);
+	check(v1->adjTris.size() > 0);
+	check(v0->GetMaterialIndex() == v1->GetMaterialIndex());
+
+
+
+	// Because another edge in the same edge group may share a vertex with this edge
+	// and it might have already been collapsed, we can't do this check
+	//check(! (v0->TestFlags(SIMP_LOCKED) && v1->TestFlags(SIMP_LOCKED)) );
+
+
+	// Verify that this is truly an edge of a triangle
+
+	v0->EnableAdjVertFlags(SIMP_MARK1);
+	v1->DisableAdjVertFlags(SIMP_MARK1);
+
+	if (v0->TestFlags(SIMP_MARK1))
+	{
+		// Invalid edge results from collapsing a bridge tri
+		// There are no actual triangles connecting these verts
+		v0->DisableAdjVertFlags(SIMP_MARK1);
+
+		EdgePtr->EnableFlags(SIMP_REMOVED);
+		const unsigned int Idx = RemoveEdge(*EdgePtr);
+		if (Idx < UINT32_MAX)
+		{
+			AddUnique(RemovedEdgeIdxArray, Idx);
+		}
+
+		// return false because the was no real edge to collapse
+		return false;
+	}
+
+	// update edges from v0 to v1
+
+	// Note, the position and other attributes have already been corrected
+	// to have the same values.  Here we are just propagating any locked state.
+	if (v0->TestFlags(SIMP_LOCKED))
+		v1->EnableFlags(SIMP_LOCKED);
+
+	// this version of the vertex will be removed after the collapse
+	v0->DisableFlags(SIMP_LOCKED); // we already shared the locked state with the remaining vertex
+
+	// Update 'other'-u edges to 'other'-v edges ( where other != v) 
+
+	for (auto triIter = v0->adjTris.begin(); triIter != v0->adjTris.end(); ++triIter)
+	{
+		SimpTri* TriPtr = *triIter;
+		for (int j = 0; j < 3; j++)
+		{
+			SimpVert* VertPtr = TriPtr->verts[j];
+			if (VertPtr->TestFlags(SIMP_MARK1))
+			{
+
+				// replace v0-vert with v1-vert
+				// first remove v1-vert if it already exists ( it shouldn't..)
+				{
+					unsigned int Idx = RemoveEdge(VertPtr, v1);
+					if (Idx < UINT32_MAX)
+					{
+						AddUnique(RemovedEdgeIdxArray, Idx);
+					}
+
+					ReplaceVertInEdge(v0, VertPtr, v1);
+				}
+				VertPtr->DisableFlags(SIMP_MARK1);
+			}
+		}
+	}
+
+	// For faces with verts: v0, v1, other
+	// remove the v0-other edges.
+	v0->EnableAdjVertFlags(SIMP_MARK1);
+	v0->DisableFlags(SIMP_MARK1);
+	v1->DisableFlags(SIMP_MARK1);
+
+	for (auto triIter = v1->adjTris.begin(); triIter != v1->adjTris.end(); ++triIter)
+	{
+		SimpTri* TriPtr = *triIter;
+		for (int j = 0; j < 3; j++)
+		{
+			SimpVert* VertPtr = TriPtr->verts[j];
+			if (VertPtr->TestFlags(SIMP_MARK1))
+			{
+				const unsigned int Idx = RemoveEdge(v0, VertPtr);
+				if (Idx < UINT32_MAX)
+				{
+					AddUnique(RemovedEdgeIdxArray, Idx);
+				}
+				//
+				VertPtr->DisableFlags(SIMP_MARK1);
+			}
+		}
+	}
+
+	v1->DisableAdjVertFlags(SIMP_MARK1);
+
+	// Remove collapsed triangles, and fix-up the others that now use v instead of u triangles
+
+	std::vector<SimpTri*> v0AdjTris;
+	{
+		unsigned int i = 0;
+		v0AdjTris.resize(v0->adjTris.size());
+
+		for (auto triIter = v0->adjTris.begin(); triIter != v0->adjTris.end(); ++triIter)
+		{
+			v0AdjTris[i] = *triIter;
+			i++;
+		}
+	}
+
+	for (int i = 0, iMax = v0AdjTris.size(); i < iMax; ++i)
+	{
+		SimpTri* TriPtr = v0AdjTris[i];
+
+		check(!TriPtr->TestFlags(SIMP_REMOVED));
+		check(TriPtr->HasVertex(v0));
+
+		if (TriPtr->HasVertex(v1))  // tri shared by v0 and v1.. 
+		{
+			// delete triangles on edge uv
+			ReducedNumTris--;
+			RemoveTri(*TriPtr);
+		}
+		else
+		{
+			// update triangles to have v1 instead of v0
+			ReplaceTriVertex(*TriPtr, *v0, *v1);
+		}
+	}
+
+
+	// remove modified verts and tris from cache
+	v1->EnableAdjVertFlags(SIMP_MARK1);
+	for (auto triIter = v1->adjTris.begin(); triIter != v1->adjTris.end(); ++triIter)
+	{
+		SimpTri* TriPtr = *triIter;
+
+		for (int i = 0; i < 3; i++)
+		{
+			SimpVert* VertPtr = TriPtr->verts[i];
+			if (VertPtr->TestFlags(SIMP_MARK1))
+			{
+				VertPtr->DisableFlags(SIMP_MARK1);
+			}
+		}
+	}
+
+	// mark v0 as dead.
+
+	v0->adjTris.clear();	// u has been removed
+	v0->EnableFlags(SIMP_REMOVED);
+
+	// Remove the actual edge.
+	const unsigned int Idx = RemoveEdge(*EdgePtr);
+	if (Idx < UINT32_MAX)
+	{
+		AddUnique(RemovedEdgeIdxArray, Idx);
+	}
+
+	// record the reduced number of verts
+
+	ReducedNumVerts--;
+
 	return true;
 }
 
@@ -771,4 +900,518 @@ unsigned int MeshManager::ReplaceVertInEdge(const SimpVert* VertAPtr, const Simp
 		edge->v1 = VertAprimePtr;
 
 	return Idx;
+}
+
+int MeshManager::RemoveIfDegenerate(std::vector<SimpTri*>& CandidateTrisPtrArray)
+{
+	int NumRemoved = 0;
+	for (SimpTri* tri : CandidateTrisPtrArray)
+	{
+		if (tri->TestFlags(SIMP_REMOVED)) continue;
+
+		Vector3 p0 = tri->verts[0]->GetPos();
+		Vector3 p1 = tri->verts[1]->GetPos();
+		Vector3 p2 = tri->verts[2]->GetPos();
+		Vector3 normal = (p2 - p0).cross(p1 - p0);
+		float lenSq = normal._x * normal._x + normal._y * normal._y + normal._z * normal._z;
+
+		if (lenSq == 0.0f)
+		{
+			++NumRemoved;
+			tri->EnableFlags(SIMP_REMOVED);
+			for (int j = 0; j < 3; ++j)
+			{
+				SimpVert* vert = tri->verts[j];
+				vert->adjTris.remove(tri);
+			}
+		}
+
+	}
+	ReducedNumTris -= NumRemoved;
+	return NumRemoved;
+}
+
+int MeshManager::RemoveIfDegenerate(std::vector<SimpVert*>& CandidateVertPtrArray)
+{
+	int NumRemoved = 0;
+	for (SimpVert* vert : CandidateVertPtrArray)
+	{
+		if (vert->TestFlags(SIMP_REMOVED)) continue;
+
+		if (vert->adjTris.size() == 0)
+		{
+			vert->EnableFlags(SIMP_REMOVED);
+			++NumRemoved;
+
+			vert->next->prev = vert->prev;
+			vert->prev->next = vert->next;
+			vert->prev = vert;
+			vert->next = vert;
+		}
+	}
+	ReducedNumVerts -= NumRemoved;
+	return NumRemoved;
+}
+
+int MeshManager::RemoveIfDegenerate(std::vector<SimpEdge*>& CandidateEdges, std::vector<unsigned int>& RemoveEdgeIdxArray)
+{
+	int EdgesNum = CandidateEdges.size();
+	for (int i = 0; i < EdgesNum; ++i)
+	{
+		SimpEdge* edge = CandidateEdges[i];
+		if(edge->TestFlags(SIMP_REMOVED)) continue;
+
+		SimpEdge* e = edge;
+		do 
+		{
+			AddUnique(CandidateEdges, e);
+			e = e->next;
+		} while (e != edge);
+	}
+
+	for (int i = 0, Num = CandidateEdges.size(); i < Num; ++i)
+	{
+		SimpEdge* edge = CandidateEdges[i];
+		if(edge->TestFlags(SIMP_REMOVED)) continue;
+
+		if (edge->v0 == edge->v1)
+		{
+			edge->EnableFlags(SIMP_REMOVED);
+
+			unsigned int idx = GetEdgeIndex(edge);
+			if (idx < UINT32_MAX)
+			{
+				AddUnique(RemoveEdgeIdxArray, idx);
+			}
+		}
+		else if(edge->v0->TestFlags(SIMP_REMOVED) || edge->v1->TestFlags(SIMP_REMOVED))
+		{
+			unsigned int idx = GetEdgeIndex(edge);
+			if (idx < UINT32_MAX)
+			{
+				AddUnique(RemoveEdgeIdxArray, idx);
+			}
+		}
+	}
+	return RemoveEdgeIdxArray.size();
+}
+
+void MeshManager::RebuildEdgeLinkLists(std::vector<SimpEdge*>& CandidateEdgePtrArray)
+{
+	int NumEdges = CandidateEdgePtrArray.size();
+
+	for (int i = 0; i < NumEdges; ++i)
+	{
+		SimpEdge* edge = CandidateEdgePtrArray[i];
+		if(edge->TestFlags(SIMP_REMOVED)) continue;
+
+		edge->next = edge;
+		edge->prev = edge;
+	}
+
+	std::unordered_multimap<unsigned, unsigned> HashTable;
+
+	for (int i = 0; i < NumEdges; ++i)
+	{
+		SimpEdge* edge = CandidateEdgePtrArray[i];
+		if(edge->TestFlags(SIMP_REMOVED)) continue;
+
+		HashTable.insert(std::make_pair(HashEdgePosition(*edge), i));
+	}
+
+	for (int i = 0; i < NumEdges; ++i)
+	{
+		SimpEdge* edge = CandidateEdgePtrArray[i];
+		if(edge->TestFlags(SIMP_REMOVED) || edge->next != edge) continue;
+
+		unsigned int HashValue = HashEdgePosition(*edge);
+		SimpEdge* e1 = edge;
+
+		auto range = HashTable.equal_range(HashValue);
+		auto& start = range.first;
+		auto& end = range.second;
+		for (; start != end; ++start)
+		{
+			SimpEdge* e2 = CandidateEdgePtrArray[start->second];
+
+			bool m1 =
+				(e1->v0 == e2->v0 || e1->v0->GetPos() == e2->v0->GetPos()) &&
+				(e1->v1 == e2->v1 || e1->v1->GetPos() == e2->v1->GetPos());
+
+			bool m2 =
+				(e1->v0 == e2->v1 || e1->v0->GetPos() == e2->v1->GetPos()) &&
+				(e1->v1 == e2->v0 || e1->v1->GetPos() == e2->v0->GetPos());
+
+			if (m2)
+			{
+				SimpVert* tmp = e2->v0;
+				e2->v0 = e2->v1;
+				e2->v1 = tmp;
+			}
+
+			if (m1 || m2)
+			{
+				check(e2->next == e2);
+				check(e2->prev == e2);
+
+				e2->next = e1->next;
+				e2->prev = e1;
+				e2->next->prev = e2;
+				e2->prev->next = e2;
+			}
+		}
+	}
+}
+
+int MeshManager::RemoveDegenerateTris()
+{
+	std::vector<SimpTri*> TriPtrArray(NumSrcTris);
+
+	for (int i = 0; i < NumSrcTris; ++i)
+	{
+		TriPtrArray[i] = &TriArray[i];
+	}
+	return RemoveIfDegenerate(TriPtrArray);
+}
+
+int MeshManager::RemoveDegenerateVerts()
+{
+	std::vector<SimpVert*> VertPtrArray(NumSrcVerts);
+
+	for (int i = 0; i < NumSrcVerts; ++i)
+	{
+		VertPtrArray[i] = &VertArray[i];
+	}
+	return RemoveIfDegenerate(VertPtrArray);
+}
+
+void MeshManager::FlagBoundary(const SimpElementFlags Flag)
+{
+	std::vector<SimpVert*> adjVerts;
+	if (NumSrcVerts == 0 || NumSrcTris == 0)
+	{
+		//Avoid trying to compute an empty mesh
+		return;
+	}
+
+	for (int i = 0; i < NumSrcVerts; i++)
+	{
+
+		SimpVert* v0 = &VertArray[i];
+		check(v0 != NULL);
+		check(v0->adjTris.size() > 0);
+
+		// not sure if this test is valid.  
+		if (v0->TestFlags(Flag))
+		{
+			// we must have visited this vert already in a vert group
+			continue;
+		}
+
+
+		//Find all the verts that are adjacent to any vert in this group.
+		adjVerts.clear();
+		//the scope below replaces  v0->FindAdjacentVertsGroup(adjVerts);
+		{
+			SimpVert* v = v0;
+			do {
+				for (auto triIter = v->adjTris.begin(); triIter != v->adjTris.end(); ++triIter)
+				{
+					for (int j = 0; j < 3; j++)
+					{
+						SimpVert* TriVert = (*triIter)->verts[j];
+						if (TriVert != v)
+						{
+							AddUnique(adjVerts, TriVert);
+						}
+					}
+				}
+				v = v->next;
+			} while (v != v0);
+		}
+
+		for (SimpVert* v1 : adjVerts)
+		{
+			if (v0 < v1)
+			{
+
+				// set if this edge is boundary
+				// find faces that share v0 and v1
+				v0->EnableAdjTriFlagsGroup(SIMP_MARK1);
+				v1->DisableAdjTriFlagsGroup(SIMP_MARK1);
+
+				int faceCount = 0;
+				SimpVert* vert = v0;
+				do
+				{
+					for (auto j = vert->adjTris.begin(); j != vert->adjTris.end(); ++j)
+					{
+						SimpTri* tri = *j;
+						faceCount += tri->TestFlags(SIMP_MARK1) ? 0 : 1;
+					}
+					vert = vert->next;
+				} while (vert != v0);
+
+				// reset v0-group flag.
+				v0->DisableAdjTriFlagsGroup(SIMP_MARK1);
+
+				if (faceCount == 1)
+				{
+					// only one face on this edge
+					v0->EnableFlagsGroup(Flag);
+					v1->EnableFlagsGroup(Flag);
+				}
+			}
+		}
+	}
+}
+
+void MeshManager::GetCoincidentVertGroups(std::vector<SimpVert*> CoincidentVertGroups)
+{
+	for (int i = 0; i < NumSrcVerts; ++i)
+	{
+		SimpVert* vert = &VertArray[i];
+
+		if (vert->TestFlags(SIMP_REMOVED) || (vert->next == vert && vert->prev == vert))
+		{
+			continue;
+		}
+
+		SimpVert* tmp = vert;
+		SimpVert* maxVert = vert;
+		while (tmp->next != vert)
+		{
+			tmp = tmp->next;
+			if (tmp > maxVert && !tmp->TestFlags(SIMP_REMOVED))
+			{
+				maxVert = tmp;
+			}
+		}
+		AddUnique(CoincidentVertGroups, maxVert);
+	}
+}
+
+void MeshManager::WeldNonSplitBasicAttributes(VtxElementWeld WeldType)
+{
+	// Gather the split-vertex groups.  
+	std::vector<SimpVert*> CoincidentVertGroups;
+	GetCoincidentVertGroups(CoincidentVertGroups);
+
+	// For each split group, weld the attributes that have the same element ID
+	int NumCoincidentVertGroups = CoincidentVertGroups.size();
+
+	for (int i = 0; i < NumCoincidentVertGroups; ++i)
+	{
+		SimpVert* HeadVert = CoincidentVertGroups[i];
+
+		if (!HeadVert) continue;
+
+		// Get the verts that are in this group.
+		std::vector<SimpVert*> VertGroup;
+		GetVertsInGroup(*HeadVert, VertGroup);
+
+		int  NumVertsInGroup = VertGroup.size();
+
+		// reject any groups that weren't really split.
+		if (NumVertsInGroup < 2) continue;
+
+
+		// functor that partitions attributes by attribute ID and welds attributes in a partition to the average value.
+		auto Weld = [&VertGroup, NumVertsInGroup](auto& IDAccessor, auto& ValueAccessor, auto ZeroValue)
+		{
+			// container used to sort coincident vert by ID.  
+			// used to find groups with same ID to weld together.
+
+			std::vector<VertAndID> VertAndIDArray;
+			for (SimpVert* v : VertGroup)
+			{
+				VertAndIDArray.emplace_back(v, IDAccessor(v));
+			}
+			// sort by ID
+			sort(VertAndIDArray.begin(), VertAndIDArray.end(), [](const VertAndID& A, const VertAndID& B)
+				{
+					return A.ID < B.ID;
+				});
+
+			// find and process the partitions.
+
+			int PartitionStart = 0;
+			while (PartitionStart < NumVertsInGroup)
+			{
+				auto AveValue = ZeroValue;
+				int PartitionElID = VertAndIDArray[PartitionStart].ID;
+				int PartitionEnd = NumVertsInGroup;
+				for (int n = PartitionStart; n < NumVertsInGroup; ++n)
+				{
+					if (VertAndIDArray[n].ID == PartitionElID)
+					{
+						AveValue += ValueAccessor(VertAndIDArray[n].SrcVert);
+					}
+					else
+					{
+						PartitionEnd = n;
+						break;
+					}
+				}
+				AveValue /= (PartitionEnd - PartitionStart);
+				for (int n = PartitionStart; n < PartitionEnd; ++n)
+				{
+					ValueAccessor(VertAndIDArray[n].SrcVert) = AveValue;
+				}
+
+				PartitionStart = PartitionEnd;
+			}
+
+		};
+
+		// Weld Normals with the same NormalID.
+		if (WeldType == VtxElementWeld::Normal)
+		{
+			auto NormalIDAccessor = [](SimpVert* SimpVert)->int
+			{
+				return SimpVert->vert.BasicAttributes.ElementIDs.NormalID;
+			};
+			auto NormalValueAccessor = [](SimpVert* SimpVert)->Vector3&
+			{
+				return SimpVert->vert.BasicAttributes.Normal;
+			};
+
+			Vector3 ZeroValue(0, 0, 0);
+			Weld(NormalIDAccessor, NormalValueAccessor, ZeroValue);
+		}
+		// Weld Tangents with same TangentID
+		if (WeldType == VtxElementWeld::Tangent)
+		{
+
+			auto TangentIDAccessor = [](SimpVert* SimpVert)->int
+			{
+				return SimpVert->vert.BasicAttributes.ElementIDs.TangentID;
+			};
+			auto TangentValueAccessor = [](SimpVert* SimpVert)->Vector3&
+			{
+				return SimpVert->vert.BasicAttributes.Tangent;
+			};
+
+			Vector3 ZeroValue(0, 0, 0);
+			Weld(TangentIDAccessor, TangentValueAccessor, ZeroValue);
+		}
+		// Weld BiTangent with same BiTangentID
+		if (WeldType == VtxElementWeld::BiTangent)
+		{
+			auto BiTangentIDAccessor = [](SimpVert* SimpVert)->int
+			{
+				return SimpVert->vert.BasicAttributes.ElementIDs.BiTangentID;
+			};
+			auto BiTangentValueAccessor = [](SimpVert* SimpVert)->Vector3&
+			{
+				return SimpVert->vert.BasicAttributes.BiTangent;
+			};
+
+			Vector3 ZeroValue(0, 0, 0);
+			Weld(BiTangentIDAccessor, BiTangentValueAccessor, ZeroValue);
+		}
+		// Weld Color with same ColorID
+		if (WeldType == VtxElementWeld::Color)
+		{
+
+			auto ColorIDAccessor = [](SimpVert* SimpVert)->int
+			{
+				return SimpVert->vert.BasicAttributes.ElementIDs.ColorID;
+			};
+			auto ColorValueAccessor = [](SimpVert* SimpVert)->Vector4&
+			{
+				return SimpVert->vert.BasicAttributes.Color;
+			};
+
+			Vector4 ZeroValue;
+			Weld(ColorIDAccessor, ColorValueAccessor, ZeroValue);
+		}
+		// Weld UVs with same TexCoordsID
+		if (WeldType == VtxElementWeld::UV)
+		{
+			int NumTexCoords = MAX_TEXCOORDS;
+			for (int t = 0; t < NumTexCoords; ++t)
+			{
+
+				auto TexCoordIDAccessor = [t](SimpVert* SimpVert)->int
+				{
+					return SimpVert->vert.BasicAttributes.ElementIDs.TexCoordsID[t];
+				};
+				auto TexCoordValueAccessor = [t](SimpVert* SimpVert)->Vector2&
+				{
+					return SimpVert->vert.BasicAttributes.TexCoords[t];
+				};
+
+				Vector2 ZeroValue(0, 0);
+				Weld(TexCoordIDAccessor, TexCoordValueAccessor, ZeroValue);
+			}
+		}
+
+		// After welding, need to "correct" the vert to make sure the vector attributes are normalized etc.
+		for (SimpVert* v : VertGroup)
+		{
+			v->vert.Correct();
+		}
+	}
+}
+
+void MeshManager::OutputMesh(MeshVertType* Verts, unsigned int* Indexes, std::vector<int>* LockedVerts /*= nullptr*/)
+{
+	int ValidVerts = 0;
+	for (int i = 0; i < NumSrcVerts; ++i)
+	{
+		if (!VertArray[i].TestFlags(SIMP_REMOVED))
+		{
+			++ValidVerts;
+		}
+	}
+	check(ValidVerts <= ReducedNumVerts);
+
+	std::unordered_multimap<unsigned, unsigned> HashTable;
+	int NumV = 0;
+	int NumI = 0;
+
+	for (int i = 0; i < NumSrcTris; ++i)
+	{
+		if(TriArray[i].TestFlags(SIMP_REMOVED)) continue;
+
+		for (int j = 0; j < 3; ++j)
+		{
+			SimpVert* vert = TriArray[i].verts[j];
+			check(!vert->TestFlags(SIMP_REMOVED));
+			check(vert->adjTris.size() != 0);
+
+			unsigned int HashValue = HashPoint(vert->GetPos());
+			unsigned int Idx = UINT32_MAX;
+
+			auto range = HashTable.equal_range(HashValue);
+			auto& start = range.first;
+			auto& end = range.second;
+			for (; start != end; ++start)
+			{
+				if (vert->vert == Verts[start->second])
+				{
+					Idx = start->second;
+					break;
+				}
+			}
+
+			if (Idx == UINT32_MAX)
+			{
+				if (LockedVerts && vert->TestFlags(SIMP_LOCKED))
+				{
+					LockedVerts->push_back(NumV);
+				}
+
+				HashTable.insert(std::make_pair(HashValue, NumV));
+				Verts[NumV] = vert->vert;
+				Indexes[NumI++] = NumV;
+				++NumV;
+			}
+			else
+			{
+				Indexes[NumI++] = Idx;
+			}
+		}
+	}
 }
