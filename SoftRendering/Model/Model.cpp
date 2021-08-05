@@ -38,7 +38,7 @@ void Model::update()
 	}
 
 	static float theta = 0.0f;
-	theta += 5.0f;
+	theta += 0.1f;
 	if (modelTexture != nullptr)
 	{
 

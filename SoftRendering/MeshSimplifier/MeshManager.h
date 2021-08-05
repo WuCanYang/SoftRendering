@@ -4,6 +4,7 @@
 #include "Hash.h"
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 class MeshManager
 {
@@ -66,25 +67,27 @@ public:
 
 	unsigned int GetDegree(const SimpVert* vert) const		//获取顶点邻接三角形的数量
 	{
-		SimpVert* v = const_cast<SimpVert*>(vert);
+		unsigned int Degree = 0;
 
-		unsigned int degree = 0;
-		do 
-		{
-			degree += v->adjTris.size();
-			v = v->next;
-		} while (v != vert);
-		return degree;
+		const SimpVert* StartVertPtr = vert;
+
+		const SimpVert* VertPtr = StartVertPtr;
+		do {
+			Degree += VertPtr->adjTris.size();
+			VertPtr = VertPtr->next;
+		} while (VertPtr != StartVertPtr);
+
+
+		return Degree;
 	}
 
-	void GetEdgesInGroup(const SimpEdge* edge, std::vector<SimpEdge*>& EdgeGroup) const
+	void GetEdgesInGroup(const SimpEdge* seedEdge, std::vector<SimpEdge*>& InOutEdgeGroup) const
 	{
-		SimpEdge* e = const_cast<SimpEdge*>(edge);
-		do 
-		{
-			EdgeGroup.push_back(e);
-			e = e->next;
-		} while (e != edge);
+		SimpEdge* EdgePtr = const_cast<SimpEdge*>(seedEdge);
+		do {
+			InOutEdgeGroup.push_back(EdgePtr);
+			EdgePtr = EdgePtr->next;
+		} while (EdgePtr != seedEdge);
 	}
 
 	bool HasLockedVerts(const SimpEdge* edge) const
@@ -95,10 +98,11 @@ public:
 	bool IsLockedGroup(const std::vector<SimpEdge*>& EdgeGroup) const
 	{
 		bool locked = false;
-		int size = EdgeGroup.size();
-		for (int i = 0; i < size; ++i)
+		int NumEdgesInGroup = EdgeGroup.size();
+		for (int i = 0; i < NumEdgesInGroup; ++i)
 		{
 			const SimpEdge* edge = EdgeGroup[i];
+
 			if (edge->v0->TestFlags(SIMP_LOCKED) && edge->v1->TestFlags(SIMP_LOCKED))
 			{
 				locked = true;
@@ -148,15 +152,15 @@ public:
 
 	unsigned int RemoveEdge(const SimpVert* VertAPtr, const SimpVert* VertBPtr);
 
-	void GetAdjacentTopology(const SimpVert* vert, std::vector<SimpTri*> DirtyTris, std::vector<SimpVert*> DirtyVerts, std::vector<SimpEdge*> DirtyEdges);
+	void GetAdjacentTopology(const SimpVert* vert, std::vector<SimpTri*>& DirtyTris, std::vector<SimpVert*>& DirtyVerts, std::vector<SimpEdge*>& DirtyEdges);
 
-	void GetAdjacentTopology(const SimpEdge* edge, std::vector<SimpTri*> DirtyTris, std::vector<SimpVert*> DirtyVerts, std::vector<SimpEdge*> DirtyEdges);
+	void GetAdjacentTopology(const SimpEdge* edge, std::vector<SimpTri*>& DirtyTris, std::vector<SimpVert*>& DirtyVerts, std::vector<SimpEdge*>& DirtyEdges);
 
 	int RemoveEdgeIfInvalid(std::vector<SimpEdge*>& CandidateEdges, std::vector<unsigned int>& RemovedEdgeIdxArray);
 
 	void UpdateVertexAttriuteIDs(std::vector<SimpEdge*>& InCoincidentEdges);
 
-	bool CollapseEdge(SimpEdge* EdgePtr, std::vector<unsigned int>& RemovedEdgeIdxArray);
+	bool CollapseEdge(SimpEdge* EdgePtr, std::vector<unsigned int>& RemovedEdgeIdxArray);		
 
 	unsigned int ReplaceVertInEdge(const SimpVert* VertAPtr, const SimpVert* VertBPtr, SimpVert* VertAprimePtr);	//边VertAPtr--VertBPtr	变为  VertAprimePtr--VertBPtr
 
@@ -242,7 +246,9 @@ public:
 
 	void FlagBoundary(const SimpElementFlags Flag);
 
-	void GetCoincidentVertGroups(std::vector<SimpVert*> CoincidentVertGroups);
+	void FlagEdge(std::function<bool(const SimpVert*, const SimpVert*)> IsDifferent, const SimpElementFlags Flag);
+
+	void GetCoincidentVertGroups(std::vector<SimpVert*>& CoincidentVertGroups);
 
 	struct VertAndID
 	{
@@ -296,7 +302,7 @@ private:
 	{
 		unsigned int hashValue = HashEdge(u, v);
 
-		std::pair<unsigned int, unsigned int> Result(UINT32_MAX, hashValue);
+		std::pair<unsigned int, unsigned int> Result = std::make_pair(UINT32_MAX, hashValue);
 		auto range = EdgeVertIdHashMap.equal_range(hashValue);
 		auto& start = range.first;
 		auto& end = range.second;

@@ -150,6 +150,20 @@ public:
 	DenseAttrAccessor  AsDenseAttrAccessor() { return DenseAttrAccessor((float*)&Normal, Size()); }
 	const DenseAttrAccessor  AsDenseAttrAccessor() const { return DenseAttrAccessor((float*)&Normal, Size()); }
 
+	BasicVertexAttrs& operator=(const BasicVertexAttrs& Other)
+	{
+		DenseAttrAccessor MyData = AsDenseAttrAccessor();
+		const DenseAttrAccessor OtherData = Other.AsDenseAttrAccessor();
+
+		const int NumElements = MyData.Num();
+		for (int i = 0; i < NumElements; ++i)
+		{
+			MyData[i] = OtherData[i];
+		}
+
+		return *this;
+	}
+
 	void Correct()
 	{
 		Normal.Normalize();
@@ -217,7 +231,7 @@ public:
 public:
 	typedef typename  BasicAttrContainerType::DenseAttrAccessor    DenseAttrAccessor;
 
-	unsigned int GetMaterialIndex() const { return MasterVertIndex; }
+	unsigned int GetMaterialIndex() const { return MaterialIndex; }
 	Vector3& GetPos() { return Position; }
 	const Vector3& GetPos() const { return Position; }
 
@@ -225,7 +239,7 @@ public:
 	MeshVertType():
 		MasterVertIndex(-1),
 		MaterialIndex(0),
-		Position(0),
+		Position(1),
 		SpecializedWeight(0.f),
 		BasicAttributes(),
 		AdditionalAttributes(),
@@ -240,7 +254,9 @@ public:
 		BasicAttributes(other.BasicAttributes),
 		AdditionalAttributes(other.AdditionalAttributes),
 		SparseBones(other.SparseBones)
-	{}
+	{
+		
+	}
 
 
 	AdditionalAttrContainerType& GetAdditionalAttrContainer() { return AdditionalAttributes; }

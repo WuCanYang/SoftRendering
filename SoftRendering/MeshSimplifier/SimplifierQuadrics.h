@@ -56,19 +56,22 @@ public:
 
 inline EdgeQuadric::EdgeQuadric(const Vector3d& v0Pos, const Vector3d& v1Pos, const Vector3d& FaceNormal, const double EdgeWeight)
 {
-	if (abs(FaceNormal.length() - 1.0) > 0.01) return;
+	if (abs(FaceNormal.length() - 1.0) > 0.01)
+	{
+		return;
+	}
 
 	Vector3d Edge = v1Pos - v0Pos;
 	double EdgeLength = Edge.length();
 	const double Weight = EdgeLength * EdgeWeight;
 
-	if (EdgeWeight < 1.e-8) return;
+	if (EdgeLength < 1.e-8) return;
 	else
 	{
 		Edge *= 1.0 / EdgeLength;
 	}
 
-	Vector3d N = Edge.dot(FaceNormal);
+	Vector3d N = Edge.cross(FaceNormal);
 	double length = N.length();
 	if (length < 1.e-8) return;
 	else
@@ -227,7 +230,7 @@ public:
 		double length = FaceNormal.length();
 		double Area;
 
-		if (length < 0.)
+		if (length < 1.e-8)
 		{
 			B1Matrix.Reset();
 			D1Vector.Reset();
@@ -380,7 +383,7 @@ private:
 				Attr._z = Vert2Attrs[i];
 				Attr *= weight;
 
-				double AverageAttr = (1. / 3.) * (Attr[0], Attr[1], Attr[2]);
+				double AverageAttr = (1. / 3.) * (Attr[0] + Attr[1] + Attr[2]);
 
 				GradientMatrix.SetColumn(i, Vector3d());
 				DistanceVector.SetElement(i, -1. * AverageAttr);
@@ -410,7 +413,7 @@ inline void WedgeQuadric::ComputeAttrs(const double Area, const B1MatrixType& Gr
 		if (!(weight < 1.e-6))
 		{
 			AttrValue = Pos.dot(Grad) + Dist;
-			AttrValue /= weight * Area;
+			AttrValue /= (weight * Area);
 		}
 		Attrs[i] = -AttrValue;
 	}

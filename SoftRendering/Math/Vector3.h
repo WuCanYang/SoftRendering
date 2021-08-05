@@ -1,5 +1,6 @@
 #pragma once
 #include <math.h>
+#include <iostream>
 
 class Vector3
 {
@@ -116,9 +117,16 @@ public:
 	{
 		return sqrtf(powf(_x, 2) + powf(_y, 2) + powf(_z, 2));
 	}
+
 };
 
 inline Vector3 operator*(const float& a, const Vector3& b)
 {
 	return Vector3(b._x * a, b._y * a, b._z * a);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Vector3& a)
+{
+	os << a._x << " " << a._y << " " << a._z << std::endl;
+	return os;
 }

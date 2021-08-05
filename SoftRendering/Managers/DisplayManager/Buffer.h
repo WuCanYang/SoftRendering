@@ -8,7 +8,7 @@ struct FrameBuffer
 
 	~FrameBuffer()
 	{
-		delete data;
+		delete[] data;
 	}
 };
 
@@ -20,6 +20,6 @@ struct DepthBuffer
 
 	~DepthBuffer()
 	{
-		delete data;
+		delete[] data;
 	}
 };

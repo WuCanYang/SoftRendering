@@ -52,7 +52,7 @@ void SimpVert::FindAdjacentVerts(std::vector<SimpVert*>& adjVerts)
 			{
 				// add unique
 				bool exist = false;
-				for (auto val : adjVerts)
+				for (SimpVert* val : adjVerts)
 				{
 					if (val == v)
 					{

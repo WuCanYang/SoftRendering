@@ -20,32 +20,32 @@ public:
 
 	inline void Zero() { _x = 0; _y = 0; _z = 0; _w = 0; }
 
-	inline bool operator==(const Vector4& a)
+	inline bool operator==(const Vector4& a) const
 	{
 		return _x == a._x && _y == a._y && _z == a._z && _w == a._w;
 	}
 
-	inline bool operator!=(const Vector4& a)
+	inline bool operator!=(const Vector4& a) const
 	{
 		return _x != a._x || _y != a._y || _z != a._z || _w != a._w;
 	}
 
-	inline Vector4 operator*(const float& a)
+	inline Vector4 operator*(const float& a) const
 	{
 		return Vector4(_x * a, _y * a, _z * a, _w * a);
 	}
 
-	inline Vector4 operator/(const float& a)
+	inline Vector4 operator/(const float& a) const
 	{
 		return Vector4(_x / a, _y / a, _z / a, _w / a);
 	}
 
-	inline Vector4 operator+(const Vector4& a)
+	inline Vector4 operator+(const Vector4& a) const
 	{
 		return Vector4(_x + a._x, _y + a._y, _z + a._z, _w + a._w);
 	}
 
-	inline Vector4 operator-(const Vector4& a)
+	inline Vector4 operator-(const Vector4& a) const
 	{
 		return Vector4(_x - a._x, _y - a._y, _z - a._z, _w - a._w);
 	}
@@ -68,6 +68,10 @@ public:
 		return *this;
 	}
 
+	inline double length() const
+	{
+		return sqrt(pow(_x, 2) + pow(_y, 2) + pow(_z, 2) + pow(_w, 2));
+	}
 };
 
 inline Vector4 operator*(const float& a, const Vector4& b)

@@ -93,7 +93,10 @@ void SceneManager::loadModel(std::string name)
 
 	if (EnableMeshSimplify)
 	{
+		double start = clock();
 		SimplifyMesh(m);
+		double end = clock();
+		std::cout << "Simplify Cost time: " << (end - start) / CLOCKS_PER_SEC << "s" << std::endl;
 	}
 
 	models.push_back(m);
@@ -247,10 +250,10 @@ void SceneManager::SimplifyMesh(Model* m)
 	int RemainTris			= RemainPercent * m->VerticesIndices.size();
 	float MaxDistance		= FLT_MAX;
 	float MaxFeatureCost	= FLT_MAX;
-	std::cout << "target size    "<<RemainTris << "  " << RemainVerts << std::endl;
+	std::cout << "remain size   " << RemainVerts << "    " << RemainTris << std::endl;
 	SimplifierTerminator Terminator(RemainTris, RemainVerts, MaxFeatureCost, MaxDistance);
 
-	double NormalWeight = 16.00;
+	double NormalWeight = 1.0;
 	double TangentWeight = 0.10;
 	double BiTangentWeight = 0.10;
 	double UVWeight = 0.50;
@@ -329,9 +332,14 @@ void SceneManager::SimplifyMesh(Model* m)
 
 		Simplifier.SetAttributeWeights(BasicAttrWeights);
 
-		if (LockEdges__)
+		if (LockBoundary__)
 		{
 			Simplifier.SetBoundaryLocked();
+		}
+
+		if (LockDifferentColorEdge)
+		{
+			Simplifier.SetColorEdgeLocked();
 		}
 	}
 
@@ -378,7 +386,10 @@ void SceneManager::ConvertToSkinnedMesh(Model* m, SkinnedMesh& outMesh)
 
 			auto& BasicAttr = outVertexBuffer[index].BasicAttributes;
 			BasicAttr.Normal = Normals[NormalIndex.index[j]];
-			BasicAttr.TexCoords[0] = TexCoords[TexCoordIndex.index[j]];
+
+			Vector2 TexC = TexCoords[TexCoordIndex.index[j]];
+			BasicAttr.Color = m->modelTexture->texture2D(TexC._x, TexC._y);
+			BasicAttr.TexCoords[0] = TexC;
 
 
 			outIndexBuffer[3 * i + j] = index;

@@ -82,6 +82,11 @@ protected:
 	EdgeQuadric  GetEdgeQuadric(SimpVert* v);
 
 
+	void DirtyTriQuadricCache(std::vector<SimpTri*>& DirtyTri);
+
+	void DirtyVertAndEdgeQuadricCache(std::vector<SimpVert*>& DirtyVert);
+
+
 public:
 
 	MeshSimplifier(const MeshVertType* InSrcVerts, const unsigned int InNumSrcVerts,
@@ -103,9 +108,25 @@ public:
 		BasicAttrWeights = Weights;
 	}
 
-	void SetBoundaryLocked()
+	void SetBoundaryLocked()		//对于一条边，如果它的邻接三角形只有一个（边界），就加锁
 	{
 		meshManager.FlagBoundary(SimpElementFlags::SIMP_LOCKED);
+	}
+
+	void SetColorEdgeLocked(float ColorDistThreshold = 1.e-3)		//对于一条边，如果两个顶点颜色不一样，就加锁
+	{
+		auto IsDifferent = [ColorDistThreshold](const SimpVert* A, const SimpVert* B) -> bool
+		{
+			if (A && B)
+			{
+				const Vector4& ColorA = A->vert.BasicAttributes.Color;
+				const Vector4& ColorB = A->vert.BasicAttributes.Color;
+
+				return (ColorA - ColorB).length() > ColorDistThreshold;
+			}
+			return true;
+		};
+		meshManager.FlagEdge(IsDifferent, SIMP_LOCKED);
 	}
 
 	float SimplifyMesh(SimplifierTerminator Terminator);

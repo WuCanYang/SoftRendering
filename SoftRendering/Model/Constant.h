@@ -24,7 +24,7 @@
 
 
 // 0 - 1 的值， 例如为0.9， 那么留下 90% 的三角形数量或顶点数量
-#define RemainPercent				0.5f		
+#define RemainPercent				0.1f		
 
 
 //体积权重
@@ -42,4 +42,9 @@
 #define EdgeWeightValue__			128.0f
 
 
-#define LockEdges__					true
+//边界加锁
+#define LockBoundary__				true
+
+
+//一条边两个顶点颜色不一样，加锁
+#define LockDifferentColorEdge		true

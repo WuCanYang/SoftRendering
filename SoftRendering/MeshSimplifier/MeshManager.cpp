@@ -40,7 +40,10 @@ MeshManager::MeshManager(const MeshVertType* InSrcVerts, const unsigned int InNu
 	{
 		for (int j = 0; j < 3; ++j)
 		{
-			TriArray[i].verts[j]->adjTris.push_back(&TriArray[i]);
+			SimpTri* TriPtr = &TriArray[i];
+			SimpVert* VertPtr = TriPtr->verts[j];
+
+			VertPtr->adjTris.push_back(TriPtr);
 		}
 	}
 
@@ -57,6 +60,7 @@ MeshManager::MeshManager(const MeshVertType* InSrcVerts, const unsigned int InNu
 		unsigned int hashValue = HashEdge(EdgeArray[i].v0, EdgeArray[i].v1);
 		EdgeVertIdHashMap.insert(std::make_pair(hashValue, i));
 	}
+
 }
 
 void MeshManager::GetVertsInGroup(const SimpVert& seedVert, std::vector<SimpVert*>& InOutVertGroup) const
@@ -282,6 +286,7 @@ void MeshManager::MakeEdges(const std::vector<SimpVert>& Verts, const int NumTri
 void MeshManager::AppendConnectedEdges(const SimpVert* Vert, std::vector<SimpEdge>& Edges)
 {
 	SimpVert* v = const_cast<SimpVert*>(Vert);
+	check(v->adjTris.size() > 0);
 
 	std::vector<SimpVert*> adjVerts;
 	v->FindAdjacentVerts(adjVerts);
@@ -291,6 +296,8 @@ void MeshManager::AppendConnectedEdges(const SimpVert* Vert, std::vector<SimpEdg
 	{
 		if (v0 < v1)	//以地址存放顺序来保证边不重复
 		{
+			check(v0->GetMaterialIndex() == v1->GetMaterialIndex());
+
 			Edges.emplace_back();
 			SimpEdge& edge = Edges.back();
 			edge.v0 = v0;
@@ -317,8 +324,10 @@ void MeshManager::GroupEdges(std::vector<SimpEdge>& Edges)
 
 	for (int i = 0; i < NumEdges; ++i)
 	{
-		SimpEdge* e1 = &Edges[i];
-		if (e1->next != e1) continue;
+		if (Edges[i].next != &Edges[i])
+		{
+			continue;
+		}
 
 		unsigned int hash = HashValues[i];
 		auto range = HashTable.equal_range(hash);
@@ -326,6 +335,7 @@ void MeshManager::GroupEdges(std::vector<SimpEdge>& Edges)
 		auto& end = range.second;
 		for (; start != end; ++start)
 		{
+			SimpEdge* e1 = &Edges[i];
 			SimpEdge* e2 = &Edges[start->second];
 			if(e1 == e2) continue;
 
@@ -376,7 +386,6 @@ unsigned int MeshManager::RemoveEdge(SimpEdge& edge)
 	else
 	{
 
-		// mark as removed
 		edge.EnableFlags(SIMP_REMOVED);
 
 		unsigned int Hash = HashEdge(edge.v0, edge.v1);
@@ -394,7 +403,6 @@ unsigned int MeshManager::RemoveEdge(SimpEdge& edge)
 			++start;
 		}
 	}
-	// return the Idx
 	return Idx;
 }
 
@@ -444,7 +452,7 @@ unsigned int MeshManager::RemoveEdge(const SimpVert* VertAPtr, const SimpVert* V
 	return Idx;
 }
 
-void MeshManager::GetAdjacentTopology(const SimpEdge* edge, std::vector<SimpTri*> DirtyTris, std::vector<SimpVert*> DirtyVerts, std::vector<SimpEdge*> DirtyEdges)
+void MeshManager::GetAdjacentTopology(const SimpEdge* edge, std::vector<SimpTri*>& DirtyTris, std::vector<SimpVert*>& DirtyVerts, std::vector<SimpEdge*>& DirtyEdges)
 {
 	const SimpVert* v = edge->v0;
 	do
@@ -462,20 +470,19 @@ void MeshManager::GetAdjacentTopology(const SimpEdge* edge, std::vector<SimpTri*
 }
 
 
-void MeshManager::GetAdjacentTopology(const SimpVert* vert, std::vector<SimpTri*> DirtyTris, std::vector<SimpVert*> DirtyVerts, std::vector<SimpEdge*> DirtyEdges)
+void MeshManager::GetAdjacentTopology(const SimpVert* vert, std::vector<SimpTri*>& DirtyTris, std::vector<SimpVert*>& DirtyVerts, std::vector<SimpEdge*>& DirtyEdges)
 {
 	// need this cast because the const version is missing on the vert..
 
 	SimpVert* v = const_cast<SimpVert*>(vert);
 
 	// Gather pointers to all the triangles that share this vert.
-
 	// Update all tris touching collapse edge.
 	for (auto it = v->adjTris.begin(); it != v->adjTris.end(); ++it)
 	{
 		AddUnique(DirtyTris, *it);
 	}
-
+	
 	// Gather all verts that are adjacent to this one.
 
 	std::vector< SimpVert*> adjVerts;
@@ -905,28 +912,35 @@ unsigned int MeshManager::ReplaceVertInEdge(const SimpVert* VertAPtr, const Simp
 int MeshManager::RemoveIfDegenerate(std::vector<SimpTri*>& CandidateTrisPtrArray)
 {
 	int NumRemoved = 0;
-	for (SimpTri* tri : CandidateTrisPtrArray)
+	// remove degenerate triangles
+	// not sure why this happens
+	for (SimpTri* CandidateTriPtr : CandidateTrisPtrArray)
 	{
-		if (tri->TestFlags(SIMP_REMOVED)) continue;
+		if (CandidateTriPtr->TestFlags(SIMP_REMOVED))
+			continue;
 
-		Vector3 p0 = tri->verts[0]->GetPos();
-		Vector3 p1 = tri->verts[1]->GetPos();
-		Vector3 p2 = tri->verts[2]->GetPos();
-		Vector3 normal = (p2 - p0).cross(p1 - p0);
-		float lenSq = normal._x * normal._x + normal._y * normal._y + normal._z * normal._z;
+
+		const Vector3& p0 = CandidateTriPtr->verts[0]->GetPos();
+		const Vector3& p1 = CandidateTriPtr->verts[1]->GetPos();
+		const Vector3& p2 = CandidateTriPtr->verts[2]->GetPos();
+		const Vector3 n = (p2 - p0).cross(p1 - p0);
+		float lenSq = n._x * n._x + n._y * n._y + n._z * n._z;
 
 		if (lenSq == 0.0f)
 		{
-			++NumRemoved;
-			tri->EnableFlags(SIMP_REMOVED);
-			for (int j = 0; j < 3; ++j)
+			NumRemoved++;
+			CandidateTriPtr->EnableFlags(SIMP_REMOVED);
+
+			// remove references to tri
+			for (int j = 0; j < 3; j++)
 			{
-				SimpVert* vert = tri->verts[j];
-				vert->adjTris.remove(tri);
+				SimpVert* vert = CandidateTriPtr->verts[j];
+				vert->adjTris.remove(CandidateTriPtr);
+				// orphaned verts are removed below
 			}
 		}
-
 	}
+
 	ReducedNumTris -= NumRemoved;
 	return NumRemoved;
 }
@@ -934,65 +948,78 @@ int MeshManager::RemoveIfDegenerate(std::vector<SimpTri*>& CandidateTrisPtrArray
 int MeshManager::RemoveIfDegenerate(std::vector<SimpVert*>& CandidateVertPtrArray)
 {
 	int NumRemoved = 0;
-	for (SimpVert* vert : CandidateVertPtrArray)
+	// remove orphaned verts
+	for (SimpVert* VertPtr : CandidateVertPtrArray)
 	{
-		if (vert->TestFlags(SIMP_REMOVED)) continue;
+		if (VertPtr->TestFlags(SIMP_REMOVED))
+			continue;
 
-		if (vert->adjTris.size() == 0)
+		if (VertPtr->adjTris.size() == 0)
 		{
-			vert->EnableFlags(SIMP_REMOVED);
-			++NumRemoved;
+			NumRemoved++;
+			VertPtr->EnableFlags(SIMP_REMOVED);
 
-			vert->next->prev = vert->prev;
-			vert->prev->next = vert->next;
-			vert->prev = vert;
-			vert->next = vert;
+			// ungroup
+			VertPtr->prev->next = VertPtr->next;
+			VertPtr->next->prev = VertPtr->prev;
+			VertPtr->next = VertPtr;
+			VertPtr->prev = VertPtr;
 		}
 	}
+
 	ReducedNumVerts -= NumRemoved;
 	return NumRemoved;
 }
 
 int MeshManager::RemoveIfDegenerate(std::vector<SimpEdge*>& CandidateEdges, std::vector<unsigned int>& RemoveEdgeIdxArray)
 {
-	int EdgesNum = CandidateEdges.size();
-	for (int i = 0; i < EdgesNum; ++i)
+	const unsigned int NumCandidateEdges = CandidateEdges.size();
+
+	// add all grouped edges
+	for (unsigned int i = 0; i < NumCandidateEdges; i++)
 	{
 		SimpEdge* edge = CandidateEdges[i];
-		if(edge->TestFlags(SIMP_REMOVED)) continue;
+
+		if (edge->TestFlags(SIMP_REMOVED))
+			continue;
 
 		SimpEdge* e = edge;
-		do 
-		{
+		do {
 			AddUnique(CandidateEdges, e);
 			e = e->next;
 		} while (e != edge);
 	}
 
-	for (int i = 0, Num = CandidateEdges.size(); i < Num; ++i)
+	// remove dead edges from our edge hash.
+	for (unsigned int i = 0, Num = CandidateEdges.size(); i < Num; i++)
 	{
 		SimpEdge* edge = CandidateEdges[i];
-		if(edge->TestFlags(SIMP_REMOVED)) continue;
+
+		if (edge->TestFlags(SIMP_REMOVED))
+			continue;
 
 		if (edge->v0 == edge->v1)
 		{
-			edge->EnableFlags(SIMP_REMOVED);
+			edge->EnableFlags(SIMP_REMOVED); // djh 8/3/18.  not sure why this happens
 
-			unsigned int idx = GetEdgeIndex(edge);
-			if (idx < UINT32_MAX)
+			unsigned int Idx = RemoveEdge(*edge);
+			if (Idx < UINT32_MAX)
 			{
-				AddUnique(RemoveEdgeIdxArray, idx);
+				AddUnique(RemoveEdgeIdxArray, Idx);
 			}
 		}
-		else if(edge->v0->TestFlags(SIMP_REMOVED) || edge->v1->TestFlags(SIMP_REMOVED))
+		else if (edge->v0->TestFlags(SIMP_REMOVED) ||
+			edge->v1->TestFlags(SIMP_REMOVED))
 		{
-			unsigned int idx = GetEdgeIndex(edge);
-			if (idx < UINT32_MAX)
+
+			unsigned int Idx = RemoveEdge(*edge);
+			if (Idx < UINT32_MAX)
 			{
-				AddUnique(RemoveEdgeIdxArray, idx);
+				AddUnique(RemoveEdgeIdxArray, Idx);
 			}
 		}
 	}
+
 	return RemoveEdgeIdxArray.size();
 }
 
@@ -1034,13 +1061,21 @@ void MeshManager::RebuildEdgeLinkLists(std::vector<SimpEdge*>& CandidateEdgePtrA
 		{
 			SimpEdge* e2 = CandidateEdgePtrArray[start->second];
 
+			if (e1 == e2) continue;
+
 			bool m1 =
-				(e1->v0 == e2->v0 || e1->v0->GetPos() == e2->v0->GetPos()) &&
-				(e1->v1 == e2->v1 || e1->v1->GetPos() == e2->v1->GetPos());
+				(e1->v0 == e2->v0 &&
+					e1->v1 == e2->v1)
+				||
+				(e1->v0->GetPos() == e2->v0->GetPos() &&
+					e1->v1->GetPos() == e2->v1->GetPos());
 
 			bool m2 =
-				(e1->v0 == e2->v1 || e1->v0->GetPos() == e2->v1->GetPos()) &&
-				(e1->v1 == e2->v0 || e1->v1->GetPos() == e2->v0->GetPos());
+				(e1->v0 == e2->v1 &&
+					e1->v1 == e2->v0)
+				||
+				(e1->v0->GetPos() == e2->v1->GetPos() &&
+					e1->v1->GetPos() == e2->v0->GetPos());
 
 			if (m2)
 			{
@@ -1166,7 +1201,50 @@ void MeshManager::FlagBoundary(const SimpElementFlags Flag)
 	}
 }
 
-void MeshManager::GetCoincidentVertGroups(std::vector<SimpVert*> CoincidentVertGroups)
+void MeshManager::FlagEdge(std::function<bool(const SimpVert*, const SimpVert*)> IsDifferent, const SimpElementFlags Flag)
+{
+	int NumEdge = EdgeArray.size();
+	for (int i = 0; i < NumEdge; ++i)
+	{
+		SimpEdge& edge = EdgeArray[i];
+		if (IsDifferent(edge.v0, edge.v1))
+		{
+			edge.EnableFlags(Flag);
+			edge.v0->EnableFlags(Flag);
+			edge.v1->EnableFlags(Flag); 
+		}
+	}
+
+	for (int i = 0; i < NumSrcVerts; ++i)
+	{
+		SimpVert* v1 = &VertArray[i];
+		SimpVert* v = v1;
+		if (!v || v->TestFlags(Flag) || v->next == v) continue;
+
+		bool AddFlag = false;
+		do
+		{
+			if (IsDifferent(v, v->next))
+			{
+				v->EnableFlags(Flag);
+				AddFlag = true;
+			}
+			v = v->next;
+		} while (v != v1);
+
+		if (AddFlag)
+		{
+			v = v1;
+			do
+			{
+				v->EnableFlags(Flag);
+				v = v->next;
+			} while (v != v1);
+		}
+	}
+}
+
+void MeshManager::GetCoincidentVertGroups(std::vector<SimpVert*>& CoincidentVertGroups)
 {
 	for (int i = 0; i < NumSrcVerts; ++i)
 	{
@@ -1360,14 +1438,11 @@ void MeshManager::OutputMesh(MeshVertType* Verts, unsigned int* Indexes, std::ve
 	int ValidVerts = 0;
 	for (int i = 0; i < NumSrcVerts; ++i)
 	{
-		if (!VertArray[i].TestFlags(SIMP_REMOVED))
-		{
-			++ValidVerts;
-		}
+		ValidVerts += VertArray[i].TestFlags(SIMP_REMOVED) ? 0 : 1;
 	}
 	check(ValidVerts <= ReducedNumVerts);
 
-	std::unordered_multimap<unsigned, unsigned> HashTable;
+	std::unordered_multimap<unsigned int, unsigned int> HashTable;
 	int NumV = 0;
 	int NumI = 0;
 

@@ -812,7 +812,7 @@ class AABB2d
 
 	float Clamp(float val, float mmin, float mmax) const
 	{
-		return val < mmin ? mmin : val > mmax ? mmax : val;
+		return val < mmin ? mmin : (val > mmax ? mmax : val);
 	}
 
 public:
