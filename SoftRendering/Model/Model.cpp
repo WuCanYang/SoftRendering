@@ -15,7 +15,7 @@ Model::~Model()
 
 void Model::update()
 {
-	static Quaternion q0;
+	/*static Quaternion q0;
 	static Quaternion q1;
 	static Vector3 axis(1, 1, 1);
 	q1.RotateAxis(axis, PI);
@@ -28,7 +28,7 @@ void Model::update()
 		
 		Quaternion cur = Quaternion::slerp(q0, q1, t / 40.0f);
 		Rotation = cur.toEulerAngle();
-	}
+	}*/
 
 	/*static int t = 5;
 	if (t > 0)
